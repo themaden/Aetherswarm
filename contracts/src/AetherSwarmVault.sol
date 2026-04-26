@@ -4,12 +4,15 @@ pragma solidity ^0.8.24;
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title AetherSwarmVault
  * @dev Main vault for decentralized asset management controlled by the AI Swarm.
  */
 contract AetherSwarmVault is AccessControl, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     // We define a special "key" for our AI Swarm
     bytes32 public constant SWARM_ROLE = keccak256("SWARM_ROLE");
 
@@ -27,7 +30,7 @@ contract AetherSwarmVault is AccessControl, ReentrancyGuard {
      */
     function deposit(address token, uint256 amount) external nonReentrant {
         require(amount > 0, "Amount must be greater than zero");
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         emit Deposited(msg.sender, token, amount);
     }
 
