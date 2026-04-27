@@ -12,6 +12,8 @@ import {Currency} from "v4-core/types/Currency.sol";
  * @title SwarmHook
  * @notice Advanced Hook for AetherSwarm with LVR protection and Dynamic Fees.
  */
+
+  
 contract SwarmHook is BaseHook {
     uint24 public constant BASE_FEE = 3000; // 0.3%
     uint24 public dynamicFee;
