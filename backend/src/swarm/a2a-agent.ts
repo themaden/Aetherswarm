@@ -6,11 +6,11 @@ import { MCPServer } from "./mcp-server";
  * @description The core AI entity that collaborates with other agents in the swarm.
  */
 export class AetherAgent {
-    private p2p: AXLNode;
+    private p2p: AxlNode;
     private tools: MCPServer;
 
     constructor() {
-        this.p2p = new AXLNode();
+        this.p2p = new AxlNode();
         this.tools = new MCPServer();
     }
 
