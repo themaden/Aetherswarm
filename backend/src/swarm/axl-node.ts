@@ -22,8 +22,8 @@ export class AxlNode {
 
      async connectToPeer(peerId: string): Promise<void> {
         // In reality, this uses gVisor stack to bypass NAT without port forwarding
-        console.log(`[AXL] Establishing encrypted tunnel to: ${peerUrl}`);
-        this.peers.add(peerUrl);
+        console.log(`[AXL] Establishing encrypted tunnel to: ${peerId}`);
+        this.peers.add(peerId);
      }
 
      /**
