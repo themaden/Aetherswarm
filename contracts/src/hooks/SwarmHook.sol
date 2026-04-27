@@ -16,13 +16,9 @@ import {Currency} from "v4-core/types/Currency.sol";
   
 contract SwarmHook is BaseHook {
     
-    // Transient storage slots (EIP-1153)- Very Advanced!
-    // These slots clear at the end of every transaction, saving massive gas.
-
-   bytes32 constant LAST_PRICE_SLOT = keccak256("swarm.last_price");
-   bytes32 constant VOLATILITY_ACCUMULATOR = keccak256("swarm.volatility");
-
-   uint24 public constant MAX_DYNAMIC_FEE = 10000; // 1%
+    // Simplified implementation for the Swarm Hook.
+    uint256 private lastRecordedPrice;
+    uint24 public constant MAX_DYNAMIC_FEE = 10000; // 1%
     address public immutable swarmVault;
 
     error Unauthorized();
@@ -60,10 +56,7 @@ contract SwarmHook is BaseHook {
         override
         returns (bytes4, BeforeSwapDelta, uint24)
     {
-        uint256 lastPrice;
-        assembly {
-            lastPrice := tload(LAST_PRICE_SLOT)
-        }
+        uint256 lastPrice = lastRecordedPrice;
 
         // Logic: If current swap deviates too much from the last price in the same block, 
         // we increase fees to 1% to burn the arbitrageur's profit.
@@ -85,10 +78,8 @@ contract SwarmHook is BaseHook {
         override
         returns (bytes4, int128)
     {
-        // Update the price in transient storage for the next swap in the same bundle
-        assembly {
-            tstore(LAST_PRICE_SLOT, 1) // In production, this would be the actual pool tick
-        }
+        // Update the price for the next swap in the same bundle.
+        lastRecordedPrice = 1; // Simplified placeholder for demo purposes.
         return (BaseHook.afterSwap.selector, 0);
     }
 }
