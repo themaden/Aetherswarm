@@ -1,51 +1,32 @@
-import {ethers} from 'ethers';
-import * as dotenv from 'dotenv';
+// backend/src/core/sealed-inference.ts
+import { createZGComputeNetworkBroker } from "@0glabs/0g-serving-broker";
+import { Wallet } from "ethers";
 
-dotenv.config();
+export class SealedInferenceBroker {
+    private broker: any;
 
-/**
- * @class SealedInference
- * @description Manages AI model interface inside a Trusted Execution Environment (TEE) using Intel SGX. It handles secure model loading, inference execution, and result retrieval while ensuring data confidentiality and integrity.
- * 
- */
+    constructor(rpcUrl: string, key: string) {
+        // Initialize broker asynchronously
+        this.initializeBroker(rpcUrl, key);
+    }
 
-export class SealedInference {
-     
-     private provider: ethers.JsonRpcProvider;
-     private wallet: ethers.Wallet;
+    private async initializeBroker(rpcUrl: string, key: string) {
+        // Create a signer from the private key
+        const signer = new Wallet(key);
+        // Create the ZG Compute Network broker
+        this.broker = await createZGComputeNetworkBroker(signer);
+    }
 
-     constructor(rpcUrl: string, privateKey: string) {
-          this.provider = new ethers.JsonRpcProvider(rpcUrl);
-          this.wallet = new ethers.Wallet(privateKey, this.provider);
-     }
-
-     /**
-      * @dev Requests an inference from the OG TEE node.
-      * The result is signed by the hardware  (Intel TDX) to prove it's AI-generated.
-      */
-
-     async getSwarmDecision(marketData: any): Promise<string> {
-
-         console.log("Sending data to TEE for Sealed Inference...");
-
-         // In a real scenario, we call the OG Serving Broker here
-         // Simulated AI decision for the hedge fund
-
-         const decision = marketData.volatility > 0.5 ? "SELL" : "BUY";
-          
-         return decision;
-     }
-
-     /**
-      * 
-      * @dev Generates the Cryptographic proof (Remote Attestation) for the blockchain.
-      */
-  
-     async generateProof(decision: string): Promise<string> {
-
-         // This proof confirms: "I am a real AI in a secure hardware chip"
-
-         return ethers.keccak256(ethers.toUtf8Bytes(decision + Date.now().toString()));
-     }
-
+    // AI makes a decision inside a secure "Black-Box" (TEE)
+    async getDecision(data: string) {
+        if (!this.broker) {
+            throw new Error("Broker not initialized");
+        }
+        const response = await this.broker.inference.submitInferenceRequest({
+            model: "aetherswarm-ai",
+            prompt: data,
+            useTee: true 
+        });
+        return response;
+    }
 }
