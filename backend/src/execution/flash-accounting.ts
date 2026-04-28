@@ -36,4 +36,20 @@ export class FlashAccounting {
         console.log("[FlashAccounting] All balances settled. Flash accounting successful.");
         return true;
     }
+
+    private deltas: Map<string, bigint> = new Map();
+
+    // Records debt or credit
+    public recordDelta(token: string, amount: bigint): void {
+        const current = this.deltas.get(token) || 0n;
+        this.deltas.set(token, current + amount);
+    }
+
+    // Checks if everyone is settled (Delta must be zero)
+    public verifySettlement(): boolean {
+        for (let [token, delta] of this.deltas) {
+            if (delta !== 0n) return false;
+        }
+        return true;
+    }
 }
