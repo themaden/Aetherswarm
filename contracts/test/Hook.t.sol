@@ -22,7 +22,7 @@ contract SwarmHookTest is Test {
         hook = new SwarmHook(IPoolManager(mockPoolManager), swarmVault);
     }
 
-    function test_InitialFeeIsBaseFee() public {
+    function test_InitialFeeIsBaseFee() public view {
         assertEq(hook.dynamicFee(), 3000); // 3000 = 0.3%
     }
 

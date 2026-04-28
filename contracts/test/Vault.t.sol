@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import {Test, console2} from "forge-std/Test.sol";
 import {AetherSwarmVault} from "../src/AetherSwarmVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 // We create a fake token to test with "real" money mechanics
 contract MockToken is IERC20 {
     mapping(address => uint256) public balanceOf;

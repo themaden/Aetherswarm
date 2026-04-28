@@ -16,8 +16,12 @@ contract AetherSwarmVault is ReentrancyGuard {
     event StrategyRootUpdated(bytes32 newRoot);
 
     modifier onlyRole(bytes32 role) {
-        require(_roles[role][msg.sender], "AccessControl: account is missing role");
+        _onlyRole(role);
         _;
+    }
+
+    function _onlyRole(bytes32 role) internal view {
+        require(_roles[role][msg.sender], "AccessControl: account is missing role");
     }
 
     function grantRole(bytes32 role, address account) external {
@@ -31,7 +35,7 @@ contract AetherSwarmVault is ReentrancyGuard {
     }
 
     function deposit(address token, uint256 amount) external nonReentrant {
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+        require(IERC20(token).transferFrom(msg.sender, address(this), amount), "ERC20 transfer failed");
     }
 
     /**
@@ -52,7 +56,11 @@ contract AetherSwarmVault is ReentrancyGuard {
         bytes calldata data, 
         bytes32[] calldata proof
     ) external nonReentrant {
-        bytes32 leaf = keccak256(abi.encodePacked(target, amount, data));
+        bytes memory encoded = abi.encodePacked(target, amount, data);
+        bytes32 leaf;
+        assembly {
+            leaf := keccak256(add(encoded, 0x20), mload(encoded))
+        }
         require(MerkleProof.verify(proof, strategyRoot, leaf), "Strategy not verified by Swarm");
 
         (bool success, ) = target.call{value: 0}(data);

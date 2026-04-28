@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Test, console2} from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 import {AetherSwarmiNFT} from "../src/AetherSwarmiNFT.sol";
 
 /**
@@ -25,7 +25,7 @@ contract AetherSwarmiNFTTest is Test {
         inft.mintAgent(user1, "ipfs://QmBrainStateHash123");
 
         assertEq(inft.ownerOf(0), user1);
-        assertEq(inft.getModelCID(0), "ipfs://QmBrainStateHash123");
+        assertEq(inft.getModelCid(0), "ipfs://QmBrainStateHash123");
     }
 
     function test_RevertWhen_HackerTriesToUpdateBrain() public {
@@ -46,6 +46,6 @@ contract AetherSwarmiNFTTest is Test {
         vm.prank(user1);
         inft.updateModelState(0, "ipfs://QmNewBrainState456");
 
-        assertEq(inft.getModelCID(0), "ipfs://QmNewBrainState456");
+        assertEq(inft.getModelCid(0), "ipfs://QmNewBrainState456");
     }
 }

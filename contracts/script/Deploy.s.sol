@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import {Script, console2} from "forge-std/Script.sol";
 import {AetherSwarmVault} from "../src/AetherSwarmVault.sol";
 import {AetherSwarmiNFT} from "../src/AetherSwarmiNFT.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 
 /**
  * @title DeployAetherSwarm

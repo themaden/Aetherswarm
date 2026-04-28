@@ -4,7 +4,6 @@ pragma solidity ^0.8.24;
 import {Script, console2} from "forge-std/Script.sol";
 import {SwarmHook} from "../src/hooks/SwarmHook.sol";
 import {HookMiner} from "../src/lib/HookMiner.sol";
-import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 
 /**
  * @title MineSwarmHook
@@ -13,7 +12,7 @@ import {IPoolManager} from "v4-core/interfaces/IPoolManager.sol";
 contract MineSwarmHook is Script {
     function setUp() public {}
 
-    function run() public {
+    function run() public view {
         // Dummy addresses for PoolManager and Vault for mining purposes
         address poolManager = 0x0000000000000000000000000000000000000001;
         address vault = 0x0000000000000000000000000000000000000002;
