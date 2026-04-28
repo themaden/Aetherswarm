@@ -15,17 +15,24 @@ export class FlashAccounting {
      * @dev Updates the delta for a specific token.
      * Negative means the user owes the pool. Positive means the pool owes the user.
      */
-    updateDelta(tokenAddress: string, amount: bigint) {
+    public updateDelta(tokenAddress: string, amount: bigint): void {
         const current = this.deltas.get(tokenAddress) || 0n;
         this.deltas.set(tokenAddress, current + amount);
         console.log(`[FlashAccounting] Delta updated for ${tokenAddress}: ${this.deltas.get(tokenAddress)}`);
     }
 
     /**
+     * @dev Alias for updateDelta to preserve older API usage.
+     */
+    public recordDelta(token: string, amount: bigint): void {
+        this.updateDelta(token, amount);
+    }
+
+    /**
      * @dev Checks if all debts are settled before the transaction ends.
      * In Uniswap v4, if any delta is not exactly zero by the end of the transaction, it reverts.
      */
-    verifySettlement(): boolean {
+    public verifySettlement(): boolean {
         console.log("[FlashAccounting] Verifying end-of-transaction deltas...");
         for (const [token, delta] of this.deltas.entries()) {
             if (delta !== 0n) {
@@ -34,22 +41,6 @@ export class FlashAccounting {
             }
         }
         console.log("[FlashAccounting] All balances settled. Flash accounting successful.");
-        return true;
-    }
-
-    private deltas: Map<string, bigint> = new Map();
-
-    // Records debt or credit
-    public recordDelta(token: string, amount: bigint): void {
-        const current = this.deltas.get(token) || 0n;
-        this.deltas.set(token, current + amount);
-    }
-
-    // Checks if everyone is settled (Delta must be zero)
-    public verifySettlement(): boolean {
-        for (let [token, delta] of this.deltas) {
-            if (delta !== 0n) return false;
-        }
         return true;
     }
 }
