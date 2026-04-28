@@ -9,6 +9,8 @@ import {ethers} from 'ethers';
 
 export class TrustService {
 
+    private enclaveSignerAddress: string;
+
     constructor(expectedEnclaveAddress: string) {
         this.enclaveSignerAddress = expectedEnclaveAddress;
     }
