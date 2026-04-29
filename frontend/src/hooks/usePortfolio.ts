@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_ENDPOINTS, fetchApi } from '@/lib/api';
 
 interface PortfolioData {
   totalValue: number;
@@ -12,18 +13,34 @@ export function usePortfolio() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    setPortfolio({
-      totalValue: 1250000,
-      dayChange: 4.2,
-      allocation: {
-        ETH: 0.35,
-        USDC: 0.45,
-        DAI: 0.15,
-        Other: 0.05,
-      },
-    });
-    setIsLoading(false);
+    let isMounted = true;
+
+    async function loadPortfolio() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const data = await fetchApi<PortfolioData>(API_ENDPOINTS.PORTFOLIO);
+
+        if (isMounted) {
+          setPortfolio(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error('Failed to load portfolio'));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadPortfolio();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { portfolio, isLoading, error };

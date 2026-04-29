@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
+import { API_ENDPOINTS, fetchApi } from '@/lib/api';
 
 interface Agent {
   id: string;
   name: string;
+  role?: string;
   status: string;
   location: string;
+}
+
+interface AgentsResponse {
+  agents: Agent[];
 }
 
 export function useSwarmAgents() {
@@ -13,13 +19,34 @@ export function useSwarmAgents() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
-    setAgents([
-      { id: '1', name: 'Node Alpha', status: 'Active', location: 'US-East' },
-      { id: '2', name: 'Node Beta', status: 'Active', location: 'EU-Central' },
-      { id: '3', name: 'Node Gamma', status: 'Idle', location: 'AP-South' },
-    ]);
-    setIsLoading(false);
+    let isMounted = true;
+
+    async function loadAgents() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const data = await fetchApi<AgentsResponse>(API_ENDPOINTS.AGENTS);
+
+        if (isMounted) {
+          setAgents(data.agents);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error('Failed to load swarm agents'));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadAgents();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { agents, isLoading, error };

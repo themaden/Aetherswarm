@@ -25,3 +25,20 @@ export const API_ENDPOINTS = {
   // TEE
   ATTESTATION: '/tee/attestation',
 };
+
+export async function fetchApi<T>(endpoint: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...init?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `API request failed with ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
