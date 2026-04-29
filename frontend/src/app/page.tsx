@@ -1,14 +1,9 @@
 "use client";
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, ShieldCheck, Cpu, Wallet, Zap, Terminal as TerminalIcon, ChevronRight, TrendingUp, ArrowUpRight } from 'lucide-react';
-import { useWeb3 } from '../hooks/useWeb3';
+import type { ReactNode } from 'react';
+import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
 
 export default function AetherSwarmPremium() {
-  const { account, connectWallet, isConnecting, formatAddress } = useWeb3();
-  const [selectedTab, setSelectedTab] = useState('overview');
-
   return (
     <div className="space-y-8">
       
@@ -150,7 +145,16 @@ export default function AetherSwarmPremium() {
 }
 
 // HELPER COMPONENTS
-function StatCard({ title, value, change, icon, iconColor, glowColor }: any) {
+interface StatCardProps {
+  title: string;
+  value: string;
+  change: string;
+  icon: ReactNode;
+  iconColor: string;
+  glowColor: string;
+}
+
+function StatCard({ title, value, change, icon, iconColor, glowColor }: StatCardProps) {
   return (
     <div className="bg-white/[0.02] border border-white/[0.06] p-6 rounded-2xl hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-300 group relative overflow-hidden hover-lift">
       {/* Subtle gradient overlay on hover */}
@@ -174,14 +178,22 @@ function StatCard({ title, value, change, icon, iconColor, glowColor }: any) {
   );
 }
 
-function LogEntry({ time, type, text }: any) {
-  const colors: any = {
+type LogEntryType = 'system' | 'success' | 'warning' | 'action';
+
+interface LogEntryProps {
+  time: string;
+  type: LogEntryType;
+  text: string;
+}
+
+function LogEntry({ time, type, text }: LogEntryProps) {
+  const colors: Record<LogEntryType, string> = {
     system: "text-slate-500",
     success: "text-emerald-400",
     warning: "text-amber-400",
     action: "text-blue-400"
   };
-  const dotColors: any = {
+  const dotColors: Record<LogEntryType, string> = {
     system: "bg-slate-600",
     success: "bg-emerald-500",
     warning: "bg-amber-500",
@@ -196,7 +208,14 @@ function LogEntry({ time, type, text }: any) {
   );
 }
 
-function AgentCard({ name, role, status, uptime }: any) {
+interface AgentCardProps {
+  name: string;
+  role: string;
+  status: string;
+  uptime?: string;
+}
+
+function AgentCard({ name, role, status, uptime }: AgentCardProps) {
   return (
     <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl flex items-center justify-between group hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-300 hover-lift">
       <div className="flex items-center gap-3">
@@ -219,7 +238,13 @@ function AgentCard({ name, role, status, uptime }: any) {
   );
 }
 
-function MiniStat({ label, value, color }: any) {
+interface MiniStatProps {
+  label: string;
+  value: string;
+  color: string;
+}
+
+function MiniStat({ label, value, color }: MiniStatProps) {
   return (
     <div className="flex justify-between items-center">
       <span className="text-[11px] text-slate-600">{label}</span>

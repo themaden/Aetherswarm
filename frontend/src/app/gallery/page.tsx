@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import { Fingerprint } from 'lucide-react';
 import INFTGalleryGrid from '@/components/gallery/INFTGalleryGrid';
 import GalleryHeader from '@/components/gallery/GalleryHeader';
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 
 interface iNFTBalance {
   address: string;
@@ -7,18 +7,12 @@ interface iNFTBalance {
 }
 
 export function useINFTBalance(address?: string) {
-  const [balance, setBalance] = useState<iNFTBalance | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
+  const balance = useMemo<iNFTBalance | null>(() => {
     if (!address) {
-      setIsLoading(false);
-      return;
+      return null;
     }
 
-    // TODO: Replace with actual contract call
-    setBalance({
+    return {
       address,
       count: 3,
       agents: [
@@ -26,9 +20,8 @@ export function useINFTBalance(address?: string) {
         { id: '002', name: 'LVR_Sentinel' },
         { id: '003', name: 'Liquidity_Seeker' },
       ],
-    });
-    setIsLoading(false);
+    };
   }, [address]);
 
-  return { balance, isLoading, error };
+  return { balance, isLoading: false, error: null };
 }

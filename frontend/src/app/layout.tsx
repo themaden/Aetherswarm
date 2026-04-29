@@ -1,9 +1,20 @@
 // frontend/src/app/layout.tsx
 import '../styles/globals.css';
 import React from 'react';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 import MobileNav from '../components/layout/MobileNav';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+});
 
 export const metadata = {
   title: 'AetherSwarm | AI Hedge Fund',
@@ -21,12 +32,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="bg-[#030308] text-slate-300 font-sans selection:bg-blue-500/30 overflow-hidden">
+      <body className={`${inter.variable} ${jetBrainsMono.variable} bg-[#030308] text-slate-300 font-sans selection:bg-blue-500/30 overflow-hidden`}>
         
         {/* GLOBAL BACKGROUND EFFECTS */}
         <div className="fixed inset-0 pointer-events-none z-0">

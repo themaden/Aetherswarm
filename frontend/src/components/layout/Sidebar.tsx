@@ -4,7 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Globe, Image as ImageIcon, Zap, Lock, Settings } from 'lucide-react';
+import { LayoutDashboard, Globe, Image as ImageIcon, Zap, Lock } from 'lucide-react';
 
 /**
  * @title Main Navigation Sidebar
