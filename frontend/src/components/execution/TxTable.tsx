@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowRightLeft } from 'lucide-react';
+import { ArrowRightLeft, ExternalLink } from 'lucide-react';
 
 interface Transaction {
   pair: string;
@@ -18,26 +18,38 @@ const TRANSACTIONS: Transaction[] = [
 
 export default function TxTable() {
   return (
-    <div className="bg-white/[0.02] border border-white/10 rounded-3xl p-6">
-      <h3 className="text-white font-bold mb-6 flex items-center gap-2">
-        <ArrowRightLeft size={18} className="text-blue-500" /> Recent Hook Swaps
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
+      <h3 className="text-white font-bold mb-6 flex items-center gap-2.5 text-sm">
+        <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/10">
+          <ArrowRightLeft size={14} className="text-blue-400" />
+        </div>
+        Recent Hook Swaps
       </h3>
       <table className="w-full text-left">
         <thead>
-          <tr className="text-[10px] text-slate-500 border-b border-white/5 uppercase tracking-widest">
-            <th className="pb-4">Asset Pair</th>
-            <th className="pb-4">Amount</th>
-            <th className="pb-4">Dynamic Fee</th>
-            <th className="pb-4">Status</th>
+          <tr className="text-[10px] text-slate-600 border-b border-white/[0.06] uppercase tracking-[0.12em]">
+            <th className="pb-4 font-semibold">Asset Pair</th>
+            <th className="pb-4 font-semibold">Amount</th>
+            <th className="pb-4 font-semibold">Dynamic Fee</th>
+            <th className="pb-4 font-semibold">Status</th>
           </tr>
         </thead>
         <tbody className="text-sm">
           {TRANSACTIONS.map((tx, idx) => (
-            <tr key={idx} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-              <td className="py-4 text-white font-bold">{tx.pair}</td>
-              <td className="py-4 text-slate-400">{tx.amount}</td>
-              <td className="py-4 text-emerald-500 font-mono">{tx.fee}</td>
-              <td className="py-4 text-xs text-blue-500 font-bold underline">{tx.status}</td>
+            <tr key={idx} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors duration-150 group">
+              <td className="py-4 text-white font-semibold">{tx.pair}</td>
+              <td className="py-4 text-slate-400 font-mono text-xs">{tx.amount}</td>
+              <td className="py-4 text-emerald-400 font-mono text-xs font-semibold">{tx.fee}</td>
+              <td className="py-4">
+                <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg ${
+                  tx.status === 'Confirmed' 
+                    ? 'text-blue-400 bg-blue-500/10 border border-blue-500/10' 
+                    : 'text-amber-400 bg-amber-500/10 border border-amber-500/10'
+                }`}>
+                  {tx.status}
+                  {tx.status === 'Confirmed' && <ExternalLink size={8} />}
+                </span>
+              </td>
             </tr>
           ))}
         </tbody>

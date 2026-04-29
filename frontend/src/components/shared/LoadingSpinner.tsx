@@ -8,15 +8,19 @@ interface LoadingSpinnerProps {
 
 export default function LoadingSpinner({ size = 'md', message }: LoadingSpinnerProps) {
   const sizeMap = {
-    sm: 'w-6 h-6',
-    md: 'w-10 h-10',
-    lg: 'w-16 h-16',
+    sm: 24,
+    md: 40,
+    lg: 64,
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-3">
-      <Loader2 size={size === 'sm' ? 24 : size === 'md' ? 40 : 64} className="text-blue-500 animate-spin" />
-      {message && <p className="text-slate-400 text-sm">{message}</p>}
+    <div className="flex flex-col items-center justify-center gap-4">
+      <div className="relative">
+        <Loader2 size={sizeMap[size]} className="text-blue-400 animate-spin" />
+        {/* Glow behind spinner */}
+        <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
+      </div>
+      {message && <p className="text-slate-500 text-sm font-medium">{message}</p>}
     </div>
   );
 }

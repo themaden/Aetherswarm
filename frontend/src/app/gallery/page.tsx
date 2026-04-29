@@ -7,12 +7,16 @@ import GalleryHeader from '@/components/gallery/GalleryHeader';
 
 export default function GalleryPage() {
   return (
-    <div className="space-y-10 animate-in fade-in zoom-in-95 duration-500">
+    <div className="space-y-10">
       {/* HEADER */}
-      <GalleryHeader />
+      <div className="fade-in-up">
+        <GalleryHeader />
+      </div>
 
       {/* GALLERY GRID */}
-      <INFTGalleryGrid />
+      <div className="fade-in-up fade-in-up-1">
+        <INFTGalleryGrid />
+      </div>
     </div>
   );
 }

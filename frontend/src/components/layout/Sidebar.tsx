@@ -22,30 +22,47 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-black/40 border-r border-white/5 backdrop-blur-xl h-screen flex flex-col fixed left-0 top-0">
+    <aside className="w-64 bg-[#030308]/80 border-r border-white/[0.06] backdrop-blur-2xl h-screen flex flex-col fixed left-0 top-0">
       {/* BRANDING */}
-      <div className="h-20 flex items-center px-6 border-b border-white/5">
+      <div className="h-20 flex items-center px-6 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-lg flex items-center justify-center">
-            <Zap size={16} className="text-white fill-white" />
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 via-blue-600 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25 animate-gradient-x">
+            <Zap size={16} className="text-white fill-white drop-shadow-lg" />
           </div>
-          <span className="text-lg font-bold text-white tracking-tight">AETHER<span className="text-blue-500">SWARM</span></span>
+          <div>
+            <span className="text-base font-extrabold text-white tracking-tight">AETHER<span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">SWARM</span></span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_6px_rgba(52,211,153,0.8)]"></div>
+              <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-[0.15em]">Protocol v2.1</span>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* SECTION LABEL */}
+      <div className="px-6 pt-6 pb-2">
+        <span className="text-[9px] text-slate-600 font-bold uppercase tracking-[0.2em]">Navigation</span>
+      </div>
+
       {/* NAVIGATION LINKS */}
-      <nav className="flex-1 py-6 px-4 space-y-2">
+      <nav className="flex-1 py-2 px-3 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.path;
           return (
             <Link key={item.name} href={item.path}>
-              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative overflow-hidden ${
                 isActive 
-                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-blue-500/[0.12] to-emerald-500/[0.06] text-blue-400 border border-blue-500/20 shadow-[inset_0_0_20px_rgba(59,130,246,0.06)]' 
+                  : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
               }`}>
-                {item.icon}
-                <span className="text-sm font-semibold">{item.name}</span>
+                {/* Active indicator line */}
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-500 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>
+                )}
+                <span className={`transition-transform duration-200 ${isActive ? 'text-blue-400' : 'group-hover:scale-110 group-hover:text-blue-400'}`}>
+                  {item.icon}
+                </span>
+                <span className="text-[13px] font-semibold">{item.name}</span>
               </div>
             </Link>
           );
@@ -53,12 +70,15 @@ export default function Sidebar() {
       </nav>
 
       {/* FOOTER / SYSTEM STATUS */}
-      <div className="p-4 border-t border-white/5">
-        <div className="bg-white/5 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+      <div className="p-3 border-t border-white/[0.06]">
+        <div className="bg-gradient-to-br from-emerald-500/[0.08] to-blue-500/[0.04] rounded-xl p-4 flex items-center gap-3 border border-emerald-500/10">
+          <div className="relative">
+            <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.7)]"></div>
+            <div className="absolute inset-0 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
+          </div>
           <div>
-            <p className="text-xs text-white font-bold">TEE Enclave</p>
-            <p className="text-[10px] text-slate-500">0G Labs Active</p>
+            <p className="text-[11px] text-white font-bold tracking-wide">TEE Enclave</p>
+            <p className="text-[9px] text-emerald-400/70 font-medium">0G Labs • Secured</p>
           </div>
         </div>
       </div>

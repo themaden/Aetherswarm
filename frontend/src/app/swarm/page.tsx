@@ -7,22 +7,28 @@ import AgentNodeGrid from '@/components/swarm/AgentNodeGrid';
 
 export default function SwarmPage() {
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-8">
       
       {/* PAGE HEADER */}
-      <div>
-        <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-2">
-          <Network className="text-blue-500" size={32} />
+      <div className="fade-in-up">
+        <h1 className="text-3xl font-extrabold text-white flex items-center gap-3 mb-2 tracking-tight">
+          <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/10">
+            <Network className="text-blue-400" size={28} />
+          </div>
           Ghost Swarm Topology
         </h1>
-        <p className="text-slate-400">Live visualization of Gensyn AXL peer-to-peer agent communications.</p>
+        <p className="text-slate-500 text-sm">Live visualization of Gensyn AXL peer-to-peer agent communications.</p>
       </div>
 
       {/* STATS ROW */}
-      <SwarmStats />
+      <div className="fade-in-up fade-in-up-1">
+        <SwarmStats />
+      </div>
 
       {/* NODE VISUALIZATION GRID */}
-      <AgentNodeGrid />
+      <div className="fade-in-up fade-in-up-2">
+        <AgentNodeGrid />
+      </div>
     </div>
   );
 }
