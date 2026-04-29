@@ -2,17 +2,14 @@
 
 import React from 'react';
 import { Activity } from 'lucide-react';
+import { useSwarmAgents } from '@/hooks/useSwarmAgents';
 import AgentNode from './AgentNode';
 
-const AGENT_NODES = [
-  { name: 'Node Alpha', role: 'Market Analyzer', status: 'Scanning Pools', location: 'US-East' },
-  { name: 'Node Beta', role: 'Sentiment Engine', status: 'Parsing Twitter', location: 'EU-Central', delay: 'animation-delay-200' },
-  { name: 'Node Gamma', role: 'Execution Router', status: 'Idle (Awaiting Signal)', location: 'AP-South', delay: 'animation-delay-400' },
-  { name: 'Hook Sentinel', role: 'Uniswap v4 Guardian', status: 'Defending LVR', location: 'On-Chain', delay: 'animation-delay-150' },
-  { name: '0G Broker', role: 'Sealed Inference', status: 'Generating Proofs', location: 'TEE Enclave', delay: 'animation-delay-500' },
-];
+const DELAYS = ['', 'animation-delay-200', 'animation-delay-400', 'animation-delay-150', 'animation-delay-500'];
 
 export default function AgentNodeGrid() {
+  const { agents, isLoading, error } = useSwarmAgents();
+
   return (
     <div className="bg-black/30 border border-white/[0.06] p-8 rounded-2xl relative overflow-hidden h-[500px]">
       {/* Background Grid Pattern */}
@@ -29,14 +26,26 @@ export default function AgentNodeGrid() {
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 relative z-10">
-        {AGENT_NODES.map((node) => (
+        {isLoading && (
+          <div className="col-span-full text-sm text-slate-500 border border-white/[0.06] bg-white/[0.02] rounded-2xl p-6">
+            Loading swarm nodes...
+          </div>
+        )}
+
+        {!isLoading && error && (
+          <div className="col-span-full text-sm text-red-300 border border-red-500/10 bg-red-500/[0.04] rounded-2xl p-6">
+            Swarm API is unavailable.
+          </div>
+        )}
+
+        {!isLoading && !error && agents.map((node, index) => (
           <AgentNode
-            key={node.name}
+            key={node.id}
             name={node.name}
-            role={node.role}
+            role={node.role || 'Swarm Agent'}
             status={node.status}
             location={node.location}
-            delay={node.delay}
+            delay={DELAYS[index % DELAYS.length]}
           />
         ))}
       </div>

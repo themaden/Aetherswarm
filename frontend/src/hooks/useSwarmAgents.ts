@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API_ENDPOINTS, fetchApi } from '@/lib/api';
 
-interface Agent {
+export interface Agent {
   id: string;
   name: string;
   role?: string;

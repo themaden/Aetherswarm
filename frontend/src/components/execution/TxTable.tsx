@@ -1,22 +1,57 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowRightLeft, ExternalLink } from 'lucide-react';
+import { API_ENDPOINTS, fetchApi } from '@/lib/api';
 
 interface Transaction {
+  id: string;
   pair: string;
   amount: string;
   fee: string;
   status: string;
 }
 
-const TRANSACTIONS: Transaction[] = [
-  { pair: 'ETH / USDC', amount: '12.5 ETH', fee: '0.35%', status: 'Confirmed' },
-  { pair: 'WBTC / USDC', amount: '0.8 BTC', fee: '0.42%', status: 'Confirmed' },
-  { pair: 'USDC / DAI', amount: '50,000 USDC', fee: '0.05%', status: 'Pending' },
-];
+interface TransactionsResponse {
+  transactions: Transaction[];
+}
 
 export default function TxTable() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadTransactions() {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const data = await fetchApi<TransactionsResponse>(API_ENDPOINTS.TRANSACTIONS);
+
+        if (isMounted) {
+          setTransactions(data.transactions);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err : new Error('Failed to load transactions'));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadTransactions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6">
       <h3 className="text-white font-bold mb-6 flex items-center gap-2.5 text-sm">
@@ -25,6 +60,20 @@ export default function TxTable() {
         </div>
         Recent Hook Swaps
       </h3>
+
+      {isLoading && (
+        <div className="text-sm text-slate-500 border border-white/[0.06] bg-white/[0.02] rounded-xl p-5">
+          Loading hook swaps...
+        </div>
+      )}
+
+      {!isLoading && error && (
+        <div className="text-sm text-red-300 border border-red-500/10 bg-red-500/[0.04] rounded-xl p-5">
+          Execution API is unavailable.
+        </div>
+      )}
+
+      {!isLoading && !error && (
       <table className="w-full text-left">
         <thead>
           <tr className="text-[10px] text-slate-600 border-b border-white/[0.06] uppercase tracking-[0.12em]">
@@ -35,8 +84,8 @@ export default function TxTable() {
           </tr>
         </thead>
         <tbody className="text-sm">
-          {TRANSACTIONS.map((tx, idx) => (
-            <tr key={idx} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors duration-150 group">
+          {transactions.map((tx) => (
+            <tr key={tx.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors duration-150 group">
               <td className="py-4 text-white font-semibold">{tx.pair}</td>
               <td className="py-4 text-slate-400 font-mono text-xs">{tx.amount}</td>
               <td className="py-4 text-emerald-400 font-mono text-xs font-semibold">{tx.fee}</td>
@@ -54,6 +103,7 @@ export default function TxTable() {
           ))}
         </tbody>
       </table>
+      )}
     </div>
   );
 }
