@@ -9,12 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@wagmi/connectors": "^8.0.8",
     "ethers": "^6.16.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.14.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "viem": "^2.48.4",
+    "wagmi": "^3.6.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

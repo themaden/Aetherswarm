@@ -48,7 +48,6 @@ export default function RootLayout({
           {/* MOBILE NAVIGATION */}
           <MobileNav />
         </div>
-        </div>
 
       </body>
     </html>

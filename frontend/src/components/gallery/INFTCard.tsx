@@ -1,7 +1,7 @@
 import React from 'react';
 import { Brain, Database, HardDrive, ShieldCheck } from 'lucide-react';
 
-interface iNFTCardProps {
+interface INFTCardProps {
   id: string;
   name: string;
   type: string;
@@ -9,7 +9,7 @@ interface iNFTCardProps {
   health: string;
 }
 
-export default function iNFTCard({ id, name, type, memory, health }: iNFTCardProps) {
+export default function INFTCard({ id, name, type, memory, health }: INFTCardProps) {
   return (
     <div className="group relative bg-white/[0.03] border border-white/10 rounded-[2rem] overflow-hidden hover:border-emerald-500/40 transition-all">
       {/* AGENT AVATAR AREA */}

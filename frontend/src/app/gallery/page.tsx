@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Fingerprint } from 'lucide-react';
-import iNFTGalleryGrid from '@/components/gallery/iNFTGalleryGrid';
+import INFTGalleryGrid from '@/components/gallery/INFTGalleryGrid';
 import GalleryHeader from '@/components/gallery/GalleryHeader';
 
 export default function GalleryPage() {
@@ -12,7 +12,7 @@ export default function GalleryPage() {
       <GalleryHeader />
 
       {/* GALLERY GRID */}
-      <iNFTGalleryGrid />
+      <INFTGalleryGrid />
     </div>
   );
 }

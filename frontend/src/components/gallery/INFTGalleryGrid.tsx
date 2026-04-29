@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import iNFTCard from './iNFTCard';
+import INFTCard from './INFTCard';
 
 const AGENTS = [
   { id: '#001', name: 'Aether_Prime', type: 'Strategy Master', memory: 'QmX8...4v2', health: '99%' },
@@ -9,11 +9,11 @@ const AGENTS = [
   { id: '#003', name: 'Liquidity_Seeker', type: 'Arbitrage Scanner', memory: 'QmPw...7r3', health: '94%' },
 ];
 
-export default function iNFTGalleryGrid() {
+export default function INFTGalleryGrid() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {AGENTS.map((agent) => (
-        <iNFTCard
+        <INFTCard
           key={agent.id}
           id={agent.id}
           name={agent.name}
