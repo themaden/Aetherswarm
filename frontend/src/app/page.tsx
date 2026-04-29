@@ -1,105 +1,160 @@
-// frontend/src/app/page.tsx (Havalı Versiyon)
 "use client";
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Activity, ShieldCheck, Cpu, Wallet, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
 import { useWeb3 } from '../hooks/useWeb3';
 
-export default function AetherSwarmDashboard() {
+export default function AetherSwarmPremium() {
   const { account, connectWallet, isConnecting, formatAddress } = useWeb3();
-  const [swarmHealth, setSwarmHealth] = useState(98);
+  const [selectedTab, setSelectedTab] = useState('overview');
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-black to-black text-green-400 p-6 font-mono selection:bg-green-500 selection:text-black">
+    <div className="min-h-screen bg-[#050505] text-slate-200 font-sans selection:bg-blue-500/30">
       
-      {/* TOP BAR: SYSTEM STATUS */}
-      <div className="flex justify-between items-center mb-8 bg-black/40 backdrop-blur-md border border-green-500/20 p-4 rounded-xl shadow-neon">
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-3 h-3 bg-green-500 rounded-full animate-ping absolute"></div>
-            <div className="w-3 h-3 bg-green-500 rounded-full relative"></div>
+      {/* BACKGROUND DECORATION */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full"></div>
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full"></div>
+      </div>
+
+      {/* NAVIGATION */}
+      <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-xl px-8 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <Zap size={20} className="text-white fill-white" />
           </div>
-          <h1 className="text-2xl font-black tracking-widest uppercase">Aether_Swarm <span className="text-[10px] text-green-700 font-normal">v1.0.4-Alpha</span></h1>
+          <div>
+            <span className="text-lg font-bold tracking-tight text-white">AETHER<span className="text-blue-500">SWARM</span></span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+              <span className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Protocol Active</span>
+            </div>
+          </div>
         </div>
-        
+
         <button 
           onClick={connectWallet}
-          className="group relative px-6 py-2 border border-green-500 overflow-hidden transition-all hover:shadow-neon"
+          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-5 py-2.5 rounded-full transition-all group"
         >
-          <span className="relative z-10 text-sm">{account ? formatAddress(account) : "INIT_HANDSHAKE"}</span>
-          <div className="absolute inset-0 bg-green-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+          <Wallet size={16} className="text-blue-400 group-hover:scale-110 transition-transform" />
+          <span className="text-sm font-semibold">{account ? formatAddress(account) : "Connect Wallet"}</span>
         </button>
-      </div>
+      </nav>
 
-      {/* GRID: ANALYTICS & AGENTS */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+      {/* MAIN CONTENT */}
+      <main className="relative z-10 max-w-7xl mx-auto p-8">
         
-        {/* VAULT CARD */}
-        <div className="lg:col-span-1 bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:border-green-500/50 transition-colors">
-          <h3 className="text-xs text-green-600 mb-4 tracking-[0.2em] underline decoration-green-900 underline-offset-8 font-bold">CORE_VAULT</h3>
-          <div className="text-5xl font-extrabold text-white mb-2">$14.2K</div>
-          <div className="flex items-center text-xs gap-2 text-green-500">
-            <span>↑ 2.4%</span>
-            <div className="h-1 w-20 bg-green-900 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500 w-2/3"></div>
+        {/* HEADER STATS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatCard title="Vault TVL" value="$1,240,432" change="+12.5%" icon={<Activity className="text-blue-500" />} />
+          <StatCard title="Active Agents" value="12 Nodes" change="Stable" icon={<Cpu className="text-emerald-500" />} />
+          <StatCard title="Security Level" value="TEE-Verified" change="Lvl 4" icon={<ShieldCheck className="text-purple-500" />} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* LEFT COLUMN: TERMINAL & MONITOR */}
+          <div className="lg:col-span-8 space-y-8">
+            <section className="bg-white/[0.03] border border-white/10 rounded-3xl p-6 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="flex items-center gap-2 font-semibold text-white">
+                  <TerminalIcon size={18} className="text-blue-500" />
+                  Live Intelligence Feed
+                </h3>
+                <div className="flex gap-2">
+                  <span className="w-2 h-2 rounded-full bg-red-500/20 border border-red-500/50"></span>
+                  <span className="w-2 h-2 rounded-full bg-yellow-500/20 border border-yellow-500/50"></span>
+                  <span className="w-2 h-2 rounded-full bg-green-500/20 border border-green-500/50"></span>
+                </div>
+              </div>
+              <div className="space-y-4 h-64 overflow-y-auto font-mono text-sm custom-scrollbar">
+                <LogEntry time="14:02:01" type="system" text="Sealed Inference session initialized via 0G Labs." />
+                <LogEntry time="14:02:15" type="success" text="Remote Attestation verified. Enclave signature: 0x82f...3c9" />
+                <LogEntry time="14:03:02" type="warning" text="Volatility spike detected on Uniswap v4 ETH/USDC pool." />
+                <LogEntry time="14:03:05" type="action" text="SwarmHook: Adjusting dynamic fee to mitigate LVR risk." />
+              </div>
+            </section>
+
+            {/* AGENT FLEET DISPLAY */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AgentCard name="Centinel_01" role="Analysis" status="Active" />
+              <AgentCard name="Executor_Alpha" role="Execution" status="Active" />
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: ACTIONS */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-gradient-to-br from-blue-600/20 to-emerald-500/20 border border-white/10 rounded-3xl p-8 backdrop-blur-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Zap size={120} />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Supply Assets</h2>
+              <p className="text-slate-400 text-sm mb-8">Contribute to the swarm intelligence pool and earn yield.</p>
+              
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between text-xs mb-2">
+                    <span className="text-slate-500 font-bold uppercase">Amount in USDC</span>
+                    <span className="text-blue-400 font-bold">MAX</span>
+                  </div>
+                  <input type="number" placeholder="0.00" className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-2xl font-bold text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                </div>
+                
+                <button className="w-full bg-white text-black font-bold py-4 rounded-2xl hover:bg-blue-500 hover:text-white transition-all shadow-xl shadow-white/5 flex items-center justify-center gap-2">
+                  Authorize Deposit <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </main>
+    </div>
+  );
+}
 
-        {/* AGENT STATUS GRID */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { name: "ANALYZER_01", status: "SCANNING", color: "bg-blue-500" },
-            { name: "EXECUTOR_01", status: "IDLE", color: "bg-green-500" },
-            { name: "SENTINEL_HOOK", status: "PROTECTING", color: "bg-purple-500" }
-          ].map((agent, i) => (
-            <div key={i} className="bg-black/40 border border-green-500/10 p-4 rounded-xl flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-green-800 font-bold">{agent.name}</p>
-                <p className="text-sm font-bold text-gray-300">{agent.status}</p>
-              </div>
-              <div className={`w-2 h-2 rounded-full ${agent.color} shadow-[0_0_8px_rgba(34,197,94,0.5)]`}></div>
-            </div>
-          ))}
+// HELPER COMPONENTS
+function StatCard({ title, value, change, icon }: any) {
+  return (
+    <div className="bg-white/[0.03] border border-white/10 p-6 rounded-3xl hover:bg-white/[0.05] transition-all">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-2.5 bg-white/5 rounded-xl border border-white/5">{icon}</div>
+        <span className={`text-xs font-bold px-2 py-1 rounded-md ${change.includes('+') ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'}`}>{change}</span>
+      </div>
+      <h4 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{title}</h4>
+      <p className="text-2xl font-bold text-white">{value}</p>
+    </div>
+  );
+}
+
+function LogEntry({ time, type, text }: any) {
+  const colors: any = {
+    system: "text-slate-500",
+    success: "text-emerald-400",
+    warning: "text-amber-400",
+    action: "text-blue-400"
+  };
+  return (
+    <div className="flex gap-3 leading-relaxed">
+      <span className="text-[10px] text-slate-700 font-bold mt-1">[{time}]</span>
+      <span className={`text-xs ${colors[type] || 'text-slate-300'}`}>{text}</span>
+    </div>
+  );
+}
+
+function AgentCard({ name, role, status }: any) {
+  return (
+    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl flex items-center justify-between group hover:border-white/20 transition-all">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+          <Cpu size={16} />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-white">{name}</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-tighter">{role}</p>
         </div>
       </div>
-
-      {/* MAIN CONSOLE AREA */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* TERMINAL LOGS */}
-        <div className="lg:col-span-2 bg-black border border-green-500/20 rounded-2xl p-4 h-[400px] relative overflow-hidden group">
-           <div className="flex justify-between items-center mb-4 border-b border-green-900 pb-2">
-              <span className="text-[10px] opacity-50 tracking-widest uppercase">Encryption: AES-256 Enabled</span>
-              <span className="text-[10px] opacity-50">Node: US-EAST-1</span>
-           </div>
-           <div className="space-y-2 text-[12px] font-light overflow-y-auto h-full pr-4 pb-8">
-              <p className="text-green-800">[{new Date().toLocaleTimeString()}] System link established...</p>
-              <p className="text-white font-bold">{`> [0G-Labs]`} Remote Attestation Verified: 0x82f...3c9</p>
-              <p className="text-blue-400">{`> [Uniswap-v4]`} Sentinel Hook active. Monitoring LVR threats.</p>
-              <p className="text-red-500 animate-pulse">{`> [WARNING]`} Toxic flow detected. Dynamic fee adjusted to 0.8%.</p>
-              <p className="text-green-400">{`> [Swarm]`} All agents synchronized via Gensyn AXL.</p>
-           </div>
-           <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black to-transparent pointer-events-none"></div>
-        </div>
-
-        {/* DEPOSIT CONTROL BOX */}
-        <div className="bg-green-500 rounded-2xl p-1 shadow-neon transform transition-transform hover:scale-[1.02]">
-          <div className="bg-black h-full w-full rounded-[14px] p-6">
-            <h2 className="text-lg font-black mb-6">INJECT_CAPITAL</h2>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] text-green-800 font-bold ml-1">ASSET_TYPE</label>
-                <div className="w-full bg-green-500/5 border border-green-500/30 p-3 text-sm">USDC (Testnet)</div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] text-green-800 font-bold ml-1">AMOUNT</label>
-                <input type="number" placeholder="0.00" className="w-full bg-transparent border-b-2 border-green-500/30 py-4 text-3xl font-black outline-none focus:border-green-500 transition-colors" />
-              </div>
-              <button className="w-full bg-green-500 text-black font-black py-4 mt-4 hover:bg-green-400 transition-all active:scale-95 uppercase tracking-widest">
-                Authorize_Deposit
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">{status}</span>
+    </div>
   );
 }
