@@ -2,7 +2,8 @@
 import '../styles/globals.css';
 import React from 'react';
 import Sidebar from '../components/layout/Sidebar';
-import Header from '../components/layout/Header'; // We will create this next
+import Header from '../components/layout/Header';
+import MobileNav from '../components/layout/MobileNav';
 
 export const metadata = {
   title: 'AetherSwarm | AI Hedge Fund',
@@ -34,14 +35,19 @@ export default function RootLayout({
           <Sidebar />
 
           {/* MAIN CONTENT AREA */}
-          <div className="flex-1 ml-64 flex flex-col h-screen overflow-hidden">
-            {/* We will add the Header here in the next step */}
+          <div className="flex-1 ml-64 md:ml-64 flex flex-col h-screen overflow-hidden">
+            {/* HEADER */}
+            <Header />
             
             {/* PAGE CONTENT */}
             <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
               {children}
             </main>
           </div>
+
+          {/* MOBILE NAVIGATION */}
+          <MobileNav />
+        </div>
         </div>
 
       </body>
