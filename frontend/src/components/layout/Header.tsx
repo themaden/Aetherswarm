@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Wallet, Bell, Shield, ChevronDown, Wifi, LogOut } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
