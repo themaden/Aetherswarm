@@ -1,9 +1,43 @@
 "use client";
 
-import type { ReactNode } from 'react';
+import React, { type ReactNode, useMemo } from 'react';
 import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
+import { useBalance, useReadContract, useAccount } from 'wagmi';
+import { formatEther } from 'viem';
+import { CONTRACT_ADDRESSES } from '@/lib/constants';
+import VaultABI from '@/abis/AetherSwarmVault.json';
+import iNFTABI from '@/abis/AetherSwarmiNFT.json';
 
 export default function AetherSwarmPremium() {
+  const { address: accountAddress } = useAccount();
+
+  // 1. Fetch Vault TVL (as ETH balance of the vault for now)
+  const { data: vaultBalance } = useBalance({
+    address: CONTRACT_ADDRESSES.VAULT.SEPOLIA as `0x${string}`,
+  });
+
+  // 2. Fetch User's Agent Count
+  const { data: agentCount } = useReadContract({
+    address: CONTRACT_ADDRESSES.NFT.SEPOLIA as `0x${string}`,
+    abi: iNFTABI,
+    functionName: 'balanceOf',
+    args: accountAddress ? [accountAddress] : undefined,
+    query: {
+      enabled: !!accountAddress,
+    }
+  });
+
+  const formattedTVL = useMemo(() => {
+    if (!vaultBalance) return "$0.00";
+    // For demo, we show ETH balance, but we could value it in USD
+    return `${Number(vaultBalance.formatted).toFixed(4)} ${vaultBalance.symbol}`;
+  }, [vaultBalance]);
+
+  const formattedAgents = useMemo(() => {
+    if (agentCount === undefined) return "0 Nodes";
+    return `${agentCount.toString()} Nodes`;
+  }, [agentCount]);
+
   return (
     <div className="space-y-8">
       
@@ -19,16 +53,16 @@ export default function AetherSwarmPremium() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 fade-in-up fade-in-up-1">
         <StatCard 
           title="Vault TVL" 
-          value="$1,240,432" 
-          change="+12.5%" 
+          value={formattedTVL} 
+          change="+0.0%" 
           icon={<Activity size={20} />}
           iconColor="text-blue-400"
           glowColor="from-blue-500/10"
         />
         <StatCard 
-          title="Active Agents" 
-          value="12 Nodes" 
-          change="Stable" 
+          title="My Agents" 
+          value={formattedAgents} 
+          change="Live" 
           icon={<Cpu size={20} />}
           iconColor="text-emerald-400"
           glowColor="from-emerald-500/10"

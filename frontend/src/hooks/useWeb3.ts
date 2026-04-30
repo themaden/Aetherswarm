@@ -60,6 +60,10 @@ export function useWeb3() {
       setError(null);
       setIsConnecting(true);
       const provider = new ethers.BrowserProvider(ethereum);
+      
+      // Force MetaMask to ask for permission every time
+      await provider.send("wallet_requestPermissions", [{ eth_accounts: {} }]);
+      
       const accounts = await provider.send("eth_requestAccounts", []);
       
       if (accounts && accounts.length > 0) {
@@ -90,9 +94,14 @@ export function useWeb3() {
 
   // Wallet disconnect function
   const disconnectWallet = () => {
-    setAccount(null);
-    setError(null);
-    console.log("Wallet disconnected");
+    const confirmDisconnect = window.confirm("Cüzdan bağlantısını kesmek istediğinize emin misiniz? (Are you sure you want to disconnect?)");
+    if (confirmDisconnect) {
+      setAccount(null);
+      setError(null);
+      console.log("Wallet disconnected");
+      return true;
+    }
+    return false;
   };
 
   // Uzun adresi kısaltmak için (Örn: 0x1234...abcd)
