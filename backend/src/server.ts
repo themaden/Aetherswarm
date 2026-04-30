@@ -6,6 +6,15 @@ const app = express();
 const port = Number(process.env.PORT || 3001);
 
 app.use(express.json());
+
+app.get("/", (_req: any, res: any) => {
+  res.json({ 
+    message: "AetherSwarm AI Oracle API is online", 
+    version: "1.0.0",
+    status: "Secure (TEE Encrypted)"
+  });
+});
+
 app.use((req: any, res: any, next: any) => {
   res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "http://localhost:3000");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
