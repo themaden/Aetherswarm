@@ -2,14 +2,17 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
-import { useBalance, useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useBalance, useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from 'wagmi';
 import { formatEther } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/constants';
 import VaultABI from '@/abis/AetherSwarmVault.json';
 import iNFTABI from '@/abis/AetherSwarmiNFT.json';
+import { sepolia } from 'wagmi/chains';
 
 export default function AetherSwarmPremium() {
   const { address: accountAddress } = useAccount();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -31,7 +34,7 @@ export default function AetherSwarmPremium() {
     functionName: 'balanceOf',
     args: accountAddress ? [accountAddress] : undefined,
     query: {
-      enabled: mounted && !!accountAddress,
+      enabled: mounted && !!accountAddress && chainId === sepolia.id,
     }
   });
 
@@ -62,7 +65,8 @@ export default function AetherSwarmPremium() {
 
   const formattedTVL = useMemo(() => {
     if (!mounted || !vaultBalance) return "0.0000 ETH";
-    return `${Number(vaultBalance.formatted).toFixed(4)} ${vaultBalance.symbol}`;
+    const val = parseFloat(vaultBalance.formatted);
+    return `${isNaN(val) ? '0.0000' : val.toFixed(4)} ${vaultBalance.symbol}`;
   }, [vaultBalance, mounted]);
 
   const formattedAgents = useMemo(() => {
@@ -70,10 +74,30 @@ export default function AetherSwarmPremium() {
     return `${agentCount.toString()} Nodes`;
   }, [agentCount, mounted]);
 
-  if (!mounted) return null; // Prevent hydration mismatch by not rendering on server
+  if (!mounted) return null;
+
+  const isWrongNetwork = accountAddress && chainId !== sepolia.id;
 
   return (
     <div className="space-y-8">
+      
+      {/* WRONG NETWORK WARNING */}
+      {isWrongNetwork && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
+            <p className="text-sm text-amber-200/80 font-medium">
+              You are connected to the wrong network. Please switch to <span className="font-bold text-white">Sepolia Testnet</span> to continue.
+            </p>
+          </div>
+          <button 
+            onClick={() => switchChain({ chainId: sepolia.id })}
+            className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95"
+          >
+            Switch to Sepolia
+          </button>
+        </div>
+      )}
       
       {/* PAGE HEADER */}
       <div className="fade-in-up flex justify-between items-end">
