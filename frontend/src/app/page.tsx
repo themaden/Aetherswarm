@@ -2,7 +2,7 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
-import { useBalance, useReadContract, useAccount } from 'wagmi';
+import { useBalance, useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { formatEther } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/constants';
 import VaultABI from '@/abis/AetherSwarmVault.json';
@@ -10,43 +10,89 @@ import iNFTABI from '@/abis/AetherSwarmiNFT.json';
 
 export default function AetherSwarmPremium() {
   const { address: accountAddress } = useAccount();
+  const [mounted, setMounted] = React.useState(false);
 
-  // 1. Fetch Vault TVL (as ETH balance of the vault for now)
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 1. Fetch Vault TVL
   const { data: vaultBalance } = useBalance({
     address: CONTRACT_ADDRESSES.VAULT.SEPOLIA as `0x${string}`,
+    query: {
+      enabled: mounted,
+    }
   });
 
   // 2. Fetch User's Agent Count
-  const { data: agentCount } = useReadContract({
+  const { data: agentCount, refetch: refetchAgents } = useReadContract({
     address: CONTRACT_ADDRESSES.NFT.SEPOLIA as `0x${string}`,
     abi: iNFTABI,
     functionName: 'balanceOf',
     args: accountAddress ? [accountAddress] : undefined,
     query: {
-      enabled: !!accountAddress,
+      enabled: mounted && !!accountAddress,
     }
   });
 
+  // 3. Mint Agent Transaction
+  const { data: hash, writeContract, isPending } = useWriteContract();
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
+    useWaitForTransactionReceipt({ 
+      hash, 
+    });
+
+  // Refetch agent count when minting is successful
+  React.useEffect(() => {
+    if (isConfirmed) {
+      refetchAgents();
+    }
+  }, [isConfirmed, refetchAgents]);
+
+  const handleMintAgent = () => {
+    if (!accountAddress) return;
+    writeContract({
+      address: CONTRACT_ADDRESSES.NFT.SEPOLIA as `0x${string}`,
+      abi: iNFTABI,
+      functionName: 'mintAgent',
+      args: [accountAddress, "ipfs://QmDefaultModelCID"], // Default model state
+    });
+  };
+
   const formattedTVL = useMemo(() => {
-    if (!vaultBalance) return "$0.00";
-    // For demo, we show ETH balance, but we could value it in USD
+    if (!mounted || !vaultBalance) return "0.0000 ETH";
     return `${Number(vaultBalance.formatted).toFixed(4)} ${vaultBalance.symbol}`;
-  }, [vaultBalance]);
+  }, [vaultBalance, mounted]);
 
   const formattedAgents = useMemo(() => {
-    if (agentCount === undefined) return "0 Nodes";
+    if (!mounted || agentCount === undefined) return "0 Nodes";
     return `${agentCount.toString()} Nodes`;
-  }, [agentCount]);
+  }, [agentCount, mounted]);
+
+  if (!mounted) return null; // Prevent hydration mismatch by not rendering on server
 
   return (
     <div className="space-y-8">
       
       {/* PAGE HEADER */}
-      <div className="fade-in-up">
-        <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
-          Command Center
-        </h1>
-        <p className="text-slate-500 text-sm">Real-time overview of AetherSwarm protocol operations.</p>
+      <div className="fade-in-up flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
+            Command Center
+          </h1>
+          <p className="text-slate-500 text-sm">Real-time overview of AetherSwarm protocol operations.</p>
+        </div>
+        
+        {/* MINT BUTTON */}
+        <button 
+          onClick={handleMintAgent}
+          disabled={isPending || isConfirming || !accountAddress}
+          className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-5 py-2.5 text-xs font-bold text-white flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+        >
+          <Zap size={14} className={isPending || isConfirming ? 'animate-pulse text-yellow-400' : 'text-blue-400'} />
+          {isPending || isConfirming ? 'Initializing Neural Link...' : 'Deploy New Agent'}
+        </button>
       </div>
 
       {/* HEADER STATS */}
@@ -62,7 +108,7 @@ export default function AetherSwarmPremium() {
         <StatCard 
           title="My Agents" 
           value={formattedAgents} 
-          change="Live" 
+          change={isConfirmed ? "Updated" : "Live"} 
           icon={<Cpu size={20} />}
           iconColor="text-emerald-400"
           glowColor="from-emerald-500/10"
