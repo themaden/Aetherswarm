@@ -1,27 +1,31 @@
-"use client";
-
-import React, { useState } from 'react';
 import { Wallet, Bell, Shield, ChevronDown, Wifi, LogOut } from 'lucide-react';
-import { useWeb3 } from '../../hooks/useWeb3';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { injected } from 'wagmi/connectors';
 
 /**
  * @title Top Header
  * @dev Manages wallet connection, network status, and system notifications.
  */
 export default function Header() {
-  const { account, connectWallet, disconnectWallet, isConnecting, formatAddress } = useWeb3();
+  const { address: account, isConnecting } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
   const [showDropdown, setShowDropdown] = useState(false);
+
+  const formatAddress = (addr: string) => {
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
 
   const handleWalletClick = () => {
     if (account) {
       setShowDropdown(!showDropdown);
     } else {
-      connectWallet();
+      connect({ connector: injected() });
     }
   };
 
   const handleDisconnect = () => {
-    disconnectWallet();
+    disconnect();
     setShowDropdown(false);
   };
 
