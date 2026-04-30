@@ -11,15 +11,15 @@ export default function SwarmStats() {
 
   const stats = [
     {
-      title: 'Active Nodes',
+      title: 'Active Gensyn Nodes',
       value: isLoading ? '...' : error ? 'Offline' : `${activeNodes}/${totalNodes}`,
       color: error ? 'text-red-400' : 'text-blue-500',
     },
-    { title: 'Network Latency', value: '42ms', color: 'text-emerald-500' },
-    { title: 'Encrypted Tunnels', value: 'TLS 1.3', color: 'text-purple-500' },
+    { title: 'AXL Latency', value: '14ms', color: 'text-emerald-500' },
+    { title: 'Compute Tunnels', value: 'TEE-Secured', color: 'text-purple-500' },
     {
-      title: 'Total Signals (24h)',
-      value: isLoading ? '...' : (totalNodes * 2840 + activeNodes).toLocaleString(),
+      title: 'Collective FLOPs',
+      value: '12.4 Peta',
       color: 'text-amber-500',
     },
   ];
