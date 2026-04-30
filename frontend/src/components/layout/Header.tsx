@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
-import { Wallet, Bell, Shield, ChevronDown, Wifi } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, Bell, Shield, ChevronDown, Wifi, LogOut } from 'lucide-react';
 import { useWeb3 } from '../../hooks/useWeb3';
 
 /**
@@ -9,7 +9,21 @@ import { useWeb3 } from '../../hooks/useWeb3';
  * @dev Manages wallet connection, network status, and system notifications.
  */
 export default function Header() {
-  const { account, connectWallet, formatAddress } = useWeb3();
+  const { account, connectWallet, disconnectWallet, formatAddress } = useWeb3();
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleWalletClick = () => {
+    if (account) {
+      setShowDropdown(!showDropdown);
+    } else {
+      connectWallet();
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnectWallet();
+    setShowDropdown(false);
+  };
 
   return (
     <header className="h-20 border-b border-white/[0.06] bg-[#030308]/60 backdrop-blur-2xl flex items-center justify-between px-8 z-20 relative">
@@ -50,17 +64,32 @@ export default function Header() {
         </div>
 
         {/* WALLET CONNECT BUTTON */}
-        <button
-          onClick={connectWallet}
-          className="flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 active:scale-[0.97] group relative overflow-hidden"
-        >
-          {/* Shimmer overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-          
-          <Wallet size={15} className="group-hover:rotate-12 transition-transform duration-300 relative z-10" />
-          <span className="relative z-10">{account ? formatAddress(account) : "Connect Wallet"}</span>
-          {account && <ChevronDown size={13} className="ml-0.5 opacity-60 relative z-10" />}
-        </button>
+        <div className="relative">
+          <button
+            onClick={handleWalletClick}
+            className="flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 active:scale-[0.97] group relative overflow-hidden"
+          >
+            {/* Shimmer overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+            
+            <Wallet size={15} className="group-hover:rotate-12 transition-transform duration-300 relative z-10" />
+            <span className="relative z-10">{account ? formatAddress(account) : "Connect Wallet"}</span>
+            {account && <ChevronDown size={13} className={`ml-0.5 opacity-60 relative z-10 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />}
+          </button>
+
+          {/* Disconnect Dropdown */}
+          {account && showDropdown && (
+            <div className="absolute top-full right-0 mt-2 bg-[#030308]/95 border border-white/[0.08] rounded-xl shadow-xl backdrop-blur-xl w-40 z-30 animate-in fade-in slide-in-from-top-2 duration-200">
+              <button
+                onClick={handleDisconnect}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:text-red-400 hover:bg-red-500/[0.08] transition-colors duration-200 rounded-xl m-1"
+              >
+                <LogOut size={14} />
+                Disconnect
+              </button>
+            </div>
+          )}
+        </div>
 
       </div>
     </header>

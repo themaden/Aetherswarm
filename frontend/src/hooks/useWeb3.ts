@@ -40,6 +40,12 @@ export function useWeb3() {
 
   // Wallet connection function
   const connectWallet = async () => {
+    // If already connected, disconnect instead
+    if (account) {
+      disconnectWallet();
+      return;
+    }
+
     const ethereum = getEthereumProvider();
 
     if (!ethereum) {
@@ -59,10 +65,16 @@ export function useWeb3() {
     }
   };
 
+  // Wallet disconnect function
+  const disconnectWallet = () => {
+    setAccount(null);
+    console.log("Wallet disconnected");
+  };
+
   // Uzun adresi kısaltmak için (Örn: 0x1234...abcd)
   const formatAddress = (addr: string) => {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
-  return { account, connectWallet, isConnecting, formatAddress };
+  return { account, connectWallet, disconnectWallet, isConnecting, formatAddress };
 }
