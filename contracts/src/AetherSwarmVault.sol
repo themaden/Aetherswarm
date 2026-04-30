@@ -38,6 +38,10 @@ contract AetherSwarmVault is ReentrancyGuard {
         require(IERC20(token).transferFrom(msg.sender, address(this), amount), "ERC20 transfer failed");
     }
 
+    function depositETH() external payable nonReentrant {
+        require(msg.value > 0, "Amount must be greater than 0");
+    }
+
     /**
      * @dev Swarm updates the allowed strategies using a Merkle Root.
      * This proves that the AI swarm planned these moves in advance inside the TEE.

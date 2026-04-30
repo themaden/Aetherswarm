@@ -3,7 +3,7 @@
 import React, { type ReactNode, useMemo } from 'react';
 import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
 import { useBalance, useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from 'wagmi';
-import { formatEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/constants';
 import VaultABI from '@/abis/AetherSwarmVault.json';
 import iNFTABI from '@/abis/AetherSwarmiNFT.json';
@@ -14,13 +14,44 @@ export default function AetherSwarmPremium() {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [mounted, setMounted] = React.useState(false);
+  const [depositAmount, setDepositAmount] = React.useState('');
+  
+  // Backend State
+  const [portfolio, setPortfolio] = React.useState<any>(null);
+  const [hookData, setHookData] = React.useState<any>(null);
+  const [logs, setLogs] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     setMounted(true);
+    
+    // Fetch Backend Data
+    const fetchData = async () => {
+      try {
+        const [portfolioRes, hookRes, transRes] = await Promise.all([
+          fetch('http://localhost:3001/api/portfolio'),
+          fetch('http://localhost:3001/api/execution/hooks'),
+          fetch('http://localhost:3001/api/transactions')
+        ]);
+        
+        const portfolioData = await portfolioRes.json();
+        const hookInfo = await hookRes.json();
+        const transData = await transRes.json();
+        
+        setPortfolio(portfolioData);
+        setHookData(hookInfo.hook);
+        setLogs(transData.transactions);
+      } catch (error) {
+        console.error("Backend fetch error:", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 10000); // Update every 10s
+    return () => clearInterval(interval);
   }, []);
 
   // 1. Fetch Vault TVL
-  const { data: vaultBalance } = useBalance({
+  const { data: vaultBalance, refetch: refetchVaultBalance } = useBalance({
     address: CONTRACT_ADDRESSES.VAULT.SEPOLIA as `0x${string}`,
     query: {
       enabled: mounted,
@@ -38,35 +69,48 @@ export default function AetherSwarmPremium() {
     }
   });
 
-  // 3. Mint Agent Transaction
-  const { data: hash, writeContract, isPending } = useWriteContract();
+  // 3. Transactions
+  const { data: mintHash, writeContract: writeMint, isPending: isMintPending } = useWriteContract();
+  const { data: depositHash, writeContract: writeDeposit, isPending: isDepositPending } = useWriteContract();
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
-    useWaitForTransactionReceipt({ 
-      hash, 
-    });
+  const { isLoading: isMintConfirming, isSuccess: isMintConfirmed } = 
+    useWaitForTransactionReceipt({ hash: mintHash });
 
-  // Refetch agent count when minting is successful
+  const { isLoading: isDepositConfirming, isSuccess: isDepositConfirmed } = 
+    useWaitForTransactionReceipt({ hash: depositHash });
+
+  // Refetch when transactions are successful
   React.useEffect(() => {
-    if (isConfirmed) {
-      refetchAgents();
+    if (isMintConfirmed) refetchAgents();
+    if (isDepositConfirmed) {
+      refetchVaultBalance();
+      setDepositAmount('');
     }
-  }, [isConfirmed, refetchAgents]);
+  }, [isMintConfirmed, isDepositConfirmed, refetchAgents, refetchVaultBalance]);
 
   const handleMintAgent = () => {
     if (!accountAddress) return;
-    writeContract({
+    writeMint({
       address: CONTRACT_ADDRESSES.NFT.SEPOLIA as `0x${string}`,
       abi: iNFTABI,
       functionName: 'mintAgent',
-      args: [accountAddress, "ipfs://QmDefaultModelCID"], // Default model state
+      args: [accountAddress, "ipfs://QmDefaultModelCID"],
+    });
+  };
+
+  const handleDeposit = () => {
+    if (!accountAddress || !depositAmount || isNaN(parseFloat(depositAmount))) return;
+    writeDeposit({
+      address: CONTRACT_ADDRESSES.VAULT.SEPOLIA as `0x${string}`,
+      abi: VaultABI,
+      functionName: 'depositETH',
+      value: parseEther(depositAmount),
     });
   };
 
   const formattedTVL = useMemo(() => {
     if (!mounted || !vaultBalance) return "0.0000 ETH";
-    const formatted = formatEther(vaultBalance.value);
-    const val = parseFloat(formatted);
+    const val = parseFloat(formatEther(vaultBalance.value));
     return `${isNaN(val) ? '0.0000' : val.toFixed(4)} ${vaultBalance.symbol}`;
   }, [vaultBalance, mounted]);
 
@@ -112,11 +156,11 @@ export default function AetherSwarmPremium() {
         {/* MINT BUTTON */}
         <button 
           onClick={handleMintAgent}
-          disabled={isPending || isConfirming || !accountAddress}
+          disabled={isMintPending || isMintConfirming || !accountAddress || isWrongNetwork}
           className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-5 py-2.5 text-xs font-bold text-white flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
         >
-          <Zap size={14} className={isPending || isConfirming ? 'animate-pulse text-yellow-400' : 'text-blue-400'} />
-          {isPending || isConfirming ? 'Initializing Neural Link...' : 'Deploy New Agent'}
+          <Zap size={14} className={isMintPending || isMintConfirming ? 'animate-pulse text-yellow-400' : 'text-blue-400'} />
+          {isMintPending || isMintConfirming ? 'Initializing Neural Link...' : 'Deploy New Agent'}
         </button>
       </div>
 
@@ -125,7 +169,7 @@ export default function AetherSwarmPremium() {
         <StatCard 
           title="Vault TVL" 
           value={formattedTVL} 
-          change="+0.0%" 
+          change={isDepositConfirmed ? "Updated" : "+0.0%"} 
           icon={<Activity size={20} />}
           iconColor="text-blue-400"
           glowColor="from-blue-500/10"
@@ -133,15 +177,15 @@ export default function AetherSwarmPremium() {
         <StatCard 
           title="My Agents" 
           value={formattedAgents} 
-          change={isConfirmed ? "Updated" : "Live"} 
+          change={isMintConfirmed ? "Updated" : "Live"} 
           icon={<Cpu size={20} />}
           iconColor="text-emerald-400"
           glowColor="from-emerald-500/10"
         />
         <StatCard 
           title="Security Level" 
-          value="TEE-Verified" 
-          change="Lvl 4" 
+          value={portfolio ? `${portfolio.apy}% APY` : "TEE-Verified"} 
+          change={portfolio ? "Lvl 4" : "Lvl 4"} 
           icon={<ShieldCheck size={20} />}
           iconColor="text-purple-400"
           glowColor="from-purple-500/10"
@@ -175,13 +219,22 @@ export default function AetherSwarmPremium() {
               </div>
             </div>
             <div className="space-y-3 h-64 overflow-y-auto font-mono text-sm custom-scrollbar bg-black/30 rounded-xl p-4 border border-white/[0.04]">
-              <LogEntry time="14:02:01" type="system" text="Sealed Inference session initialized via 0G Labs." />
-              <LogEntry time="14:02:15" type="success" text="Remote Attestation verified. Enclave signature: 0x82f...3c9" />
-              <LogEntry time="14:02:44" type="system" text="Agent Centinel_01 connected to Gensyn AXL mesh." />
-              <LogEntry time="14:03:02" type="warning" text="Volatility spike detected on Uniswap v4 ETH/USDC pool." />
-              <LogEntry time="14:03:05" type="action" text="SwarmHook: Adjusting dynamic fee to mitigate LVR risk." />
-              <LogEntry time="14:03:12" type="success" text="Fee adjustment applied. New rate: 0.42% (was 0.30%)" />
-              <LogEntry time="14:03:30" type="system" text="iNFT #001 brain-state checkpoint stored to 0G Storage." />
+              {logs.length > 0 ? (
+                logs.map((log: any, idx: number) => (
+                  <LogEntry 
+                    key={log.id} 
+                    time={`${14 + idx}:02:15`} 
+                    type={log.status === 'Confirmed' ? 'success' : 'system'} 
+                    text={`Swarm Execution: Swap ${log.amount} on ${log.pair} | Fee: ${log.fee}`} 
+                  />
+                ))
+              ) : (
+                <>
+                  <LogEntry time="14:02:01" type="system" text="Sealed Inference session initialized via 0G Labs." />
+                  <LogEntry time="14:02:15" type="success" text="Remote Attestation verified. Enclave signature: 0x82f...3c9" />
+                  <LogEntry time="14:02:44" type="system" text="Agent Centinel_01 connected to Gensyn AXL mesh." />
+                </>
+              )}
             </div>
           </section>
 
@@ -207,11 +260,13 @@ export default function AetherSwarmPremium() {
             <div className="space-y-5 relative z-10">
               <div>
                 <div className="flex justify-between text-[10px] mb-2.5">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider">Amount in USDC</span>
+                  <span className="text-slate-500 font-bold uppercase tracking-wider">Amount in ETH</span>
                   <span className="text-blue-400 font-bold cursor-pointer hover:text-blue-300 transition-colors">MAX</span>
                 </div>
                 <input 
                   type="number" 
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
                   placeholder="0.00" 
                   className="w-full bg-black/40 border border-white/[0.08] rounded-xl py-4 px-5 text-xl font-bold text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-500/50 focus:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all duration-300" 
                 />
@@ -219,16 +274,26 @@ export default function AetherSwarmPremium() {
 
               {/* Quick amount buttons */}
               <div className="flex gap-2">
-                {['100', '500', '1K', '5K'].map((amt) => (
-                  <button key={amt} className="flex-1 text-[10px] font-bold text-slate-500 bg-white/[0.03] border border-white/[0.06] py-2 rounded-lg hover:bg-white/[0.06] hover:text-white hover:border-white/[0.12] transition-all duration-200">
-                    ${amt}
+                {['0.01', '0.05', '0.1', '0.5'].map((amt) => (
+                  <button 
+                    key={amt} 
+                    onClick={() => setDepositAmount(amt)}
+                    className="flex-1 text-[10px] font-bold text-slate-500 bg-white/[0.03] border border-white/[0.06] py-2 rounded-lg hover:bg-white/[0.06] hover:text-white hover:border-white/[0.12] transition-all duration-200"
+                  >
+                    {amt} ETH
                   </button>
                 ))}
               </div>
               
-              <button className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] group/btn relative overflow-hidden">
+              <button 
+                onClick={handleDeposit}
+                disabled={isDepositPending || isDepositConfirming || !accountAddress || !depositAmount || isWrongNetwork}
+                className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] group/btn relative overflow-hidden disabled:opacity-50"
+              >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
-                <span className="relative z-10">Authorize Deposit</span>
+                <span className="relative z-10">
+                  {isDepositPending || isDepositConfirming ? 'Processing Deposit...' : 'Authorize Deposit'}
+                </span>
                 <ChevronRight size={16} className="relative z-10 group-hover/btn:translate-x-1 transition-transform duration-200" />
               </button>
             </div>
