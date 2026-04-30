@@ -5,16 +5,16 @@
 
 export const CONTRACT_ADDRESSES = {
   VAULT: {
-    MAINNET: '0x...',
-    SEPOLIA: '0x...',
+    MAINNET: process.env.NEXT_PUBLIC_VAULT_MAINNET_ADDRESS || '',
+    SEPOLIA: process.env.NEXT_PUBLIC_VAULT_ADDRESS || '',
   },
   NFT: {
-    MAINNET: '0x...',
-    SEPOLIA: '0x...',
+    MAINNET: process.env.NEXT_PUBLIC_INFT_MAINNET_ADDRESS || '',
+    SEPOLIA: process.env.NEXT_PUBLIC_INFT_ADDRESS || '',
   },
   HOOK: {
-    MAINNET: '0x...',
-    SEPOLIA: '0x...',
+    MAINNET: process.env.NEXT_PUBLIC_HOOK_MAINNET_ADDRESS || '',
+    SEPOLIA: process.env.NEXT_PUBLIC_HOOK_ADDRESS || '',
   },
 };
 
@@ -23,7 +23,7 @@ export const CONTRACT_ADDRESSES = {
  */
 export const CHAINS = {
   ETHEREUM: 1,
-  SEPOLIA: 11155111,
+  SEPOLIA: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 11155111),
 };
 
 /**

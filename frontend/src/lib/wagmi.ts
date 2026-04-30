@@ -7,6 +7,9 @@ import { http, createConfig } from 'wagmi';
 import { mainnet, sepolia } from 'wagmi/chains';
 import { injected, coinbaseWallet, walletConnect } from 'wagmi/connectors';
 
+const mainnetRpcUrl = process.env.NEXT_PUBLIC_MAINNET_RPC_URL;
+const sepoliaRpcUrl = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL;
+
 export const config = createConfig({
   chains: [mainnet, sepolia],
   connectors: [
@@ -15,8 +18,8 @@ export const config = createConfig({
     coinbaseWallet({ appName: 'AetherSwarm' }),
   ],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [mainnet.id]: http(mainnetRpcUrl),
+    [sepolia.id]: http(sepoliaRpcUrl),
   },
 });
 
