@@ -9,7 +9,7 @@ import { useWeb3 } from '../../hooks/useWeb3';
  * @dev Manages wallet connection, network status, and system notifications.
  */
 export default function Header() {
-  const { account, connectWallet, disconnectWallet, formatAddress } = useWeb3();
+  const { account, connectWallet, disconnectWallet, isConnecting, formatAddress } = useWeb3();
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleWalletClick = () => {
@@ -67,14 +67,24 @@ export default function Header() {
         <div className="relative">
           <button
             onClick={handleWalletClick}
-            className="flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 active:scale-[0.97] group relative overflow-hidden"
+            disabled={isConnecting}
+            className="flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 disabled:from-blue-600/50 disabled:to-emerald-500/50 text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 active:scale-[0.97] disabled:active:scale-100 group relative overflow-hidden"
           >
             {/* Shimmer overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
             
-            <Wallet size={15} className="group-hover:rotate-12 transition-transform duration-300 relative z-10" />
-            <span className="relative z-10">{account ? formatAddress(account) : "Connect Wallet"}</span>
-            {account && <ChevronDown size={13} className={`ml-0.5 opacity-60 relative z-10 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />}
+            {isConnecting ? (
+              <>
+                <span className="relative z-10 inline-block animate-spin">⏳</span>
+                <span className="relative z-10">Connecting...</span>
+              </>
+            ) : (
+              <>
+                <Wallet size={15} className="group-hover:rotate-12 transition-transform duration-300 relative z-10" />
+                <span className="relative z-10">{account ? formatAddress(account) : "Connect Wallet"}</span>
+                {account && <ChevronDown size={13} className={`ml-0.5 opacity-60 relative z-10 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />}
+              </>
+            )}
           </button>
 
           {/* Disconnect Dropdown */}

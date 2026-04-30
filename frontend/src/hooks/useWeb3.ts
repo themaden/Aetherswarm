@@ -20,6 +20,7 @@ function getEthereumProvider(): EthereumProvider | null {
 export function useWeb3() {
   const [account, setAccount] = useState<string | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // When the page loads, check whether the wallet has already been connected
   useEffect(() => {
@@ -49,17 +50,39 @@ export function useWeb3() {
     const ethereum = getEthereumProvider();
 
     if (!ethereum) {
-      alert("MetaMask is not installed! Please install it to use AetherSwarm.");
+      const msg = "MetaMask is not installed! Please install it to use AetherSwarm.";
+      setError(msg);
+      alert(msg);
       return;
     }
     
     try {
+      setError(null);
       setIsConnecting(true);
       const provider = new ethers.BrowserProvider(ethereum);
       const accounts = await provider.send("eth_requestAccounts", []);
-      setAccount(accounts[0]);
-    } catch (error) {
+      
+      if (accounts && accounts.length > 0) {
+        setAccount(accounts[0]);
+      } else {
+        setError("No accounts found. Please enable accounts in MetaMask.");
+      }
+    } catch (error: any) {
+      let errorMsg = "Failed to connect wallet";
+      
+      if (error.code === "INVALID_ARGUMENT") {
+        errorMsg = "MetaMask is not responding. Please make sure MetaMask is open.";
+      } else if (error.code === 4001 || error.message?.includes("rejected")) {
+        errorMsg = "Connection rejected. Please approve the connection in MetaMask.";
+      } else if (error.message?.includes("Network error")) {
+        errorMsg = "Network error. Please check your connection.";
+      } else {
+        errorMsg = error.message || errorMsg;
+      }
+      
+      setError(errorMsg);
       console.error("Wallet connection failed:", error);
+      alert(errorMsg);
     } finally {
       setIsConnecting(false);
     }
@@ -68,6 +91,7 @@ export function useWeb3() {
   // Wallet disconnect function
   const disconnectWallet = () => {
     setAccount(null);
+    setError(null);
     console.log("Wallet disconnected");
   };
 
@@ -76,5 +100,5 @@ export function useWeb3() {
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
-  return { account, connectWallet, disconnectWallet, isConnecting, formatAddress };
+  return { account, connectWallet, disconnectWallet, isConnecting, error, formatAddress };
 }
