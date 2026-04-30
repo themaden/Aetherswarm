@@ -65,12 +65,13 @@ export default function AetherSwarmPremium() {
 
   const formattedTVL = useMemo(() => {
     if (!mounted || !vaultBalance) return "0.0000 ETH";
-    const val = parseFloat(vaultBalance.formatted);
+    const formatted = formatEther(vaultBalance.value);
+    const val = parseFloat(formatted);
     return `${isNaN(val) ? '0.0000' : val.toFixed(4)} ${vaultBalance.symbol}`;
   }, [vaultBalance, mounted]);
 
   const formattedAgents = useMemo(() => {
-    if (!mounted || agentCount === undefined) return "0 Nodes";
+    if (!mounted || agentCount === undefined || agentCount === null) return "0 Nodes";
     return `${agentCount.toString()} Nodes`;
   }, [agentCount, mounted]);
 
