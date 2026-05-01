@@ -6,9 +6,9 @@
     "rootDir": "src",
     "esModuleInterop": true,
     "strict": true,
-    "ignoreDeprecations": "6.0",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*.ts"]
 }
+

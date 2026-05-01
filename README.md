@@ -23,6 +23,7 @@ The following table breaks down the core components integrated into the AetherSw
 
 | Component | Integration Layer | Functional Role |
 | :--- | :--- | :--- |
+| **x402 Protocol** | Economy | **Autonomous Payments:** AI agents pay for API resources via HTTP 402 status flow. |
 | **0G deAIOS** | Compute (TEE) | **Sealed Inference:** Hardware-based isolation (Intel TDX) for proprietary strategy execution. |
 | **0G Storage** | Persistence | **Decentralized Memory:** Storing model checkpoints and agent state proofs with high throughput (2 GB/s). |
 | **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Peer-to-peer agent discovery and encrypted communication via Yggdrasil/TLS. |

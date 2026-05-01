@@ -4,10 +4,22 @@ import { web3ListenerService } from "./services/web3Listener";
 
 const express = require("express");
 
+import { x402Middleware } from "./middleware/x402";
+
 const app = express();
 const port = Number(process.env.PORT || 3001);
 
 app.use(express.json());
+app.use(x402Middleware);
+
+// --- Simulated Protected AI Data Feed (x402) ---
+app.get("/api/ai/data/sentiment", (_req: any, res: any) => {
+  res.json({
+    source: "GlobalSentimentNode",
+    sentiment: 0.78,
+    timestamp: Date.now()
+  });
+});
 
 app.get("/", (_req: any, res: any) => {
   res.json({ 
