@@ -35,19 +35,19 @@ The following table breaks down the core components integrated into the AetherSw
 ## 🕸 System Architecture (Ghost Swarm)
 
 ```mermaid
-graph TD
-    User((User/Investor)) -->|Deposit ETH| Vault[AetherSwarm Vault]
-    Vault -->|Trigger Event| Listener[Web3 Event Listener]
-    Listener -->|Notify| Swarm[Ghost Swarm Enclave]
+flowchart TD
+    User((User/Investor)) -- "Deposit ETH" --> Vault[AetherSwarm Vault]
+    Vault -- "Trigger Event" --> Listener[Web3 Listener]
+    Listener -- "Notify" --> Swarm[Ghost Swarm Enclave]
     
     subgraph "0G Labs & TEE Environment"
-    Swarm -->|Fetch Context| DeepSeek[DeepSeek LLM Engine]
-    DeepSeek -->|Generate Decision| Decision[Signed Trade Signal]
-    Decision -->|Anchor Proof| OGStorage[0G Storage]
+    Swarm -- "Fetch Context" --> DeepSeek[DeepSeek LLM Engine]
+    DeepSeek -- "Generate Decision" --> Decision[Signed Trade Signal]
+    Decision -- "Anchor Proof" --> OGStorage[0G Storage]
     end
     
-    Decision -->|Update Fee| Hook[Uniswap v4 SwarmHook]
-    Hook -->|Protect Pool| LP[Liquidity Provider]
+    Decision -- "Update Fee" --> Hook[Uniswap v4 Hook]
+    Hook -- "Protect Pool" --> LP[Liquidity Provider]
 ```
 
 ---
