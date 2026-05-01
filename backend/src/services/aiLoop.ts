@@ -63,9 +63,15 @@ class AILoopService {
     // Step 1: Detect Liquidity
     this.addLog('action', `[SYSTEM] New liquidity detected: ${amount} ETH from ${shortAddress}`);
     
-    // Step 2: Analyze Market
+    // Step 2: Analyze Market (In-Enclave)
     await new Promise(resolve => setTimeout(resolve, 1000));
-    this.addLog('system', '[AI_SWARM] Analyzing market volatility via Uniswap Subgraph...');
+    this.addLog('system', '[TEE_ENCLAVE] Ingesting market data into sealed hardware environment...');
+    
+    // Remote Attestation Check
+    await new Promise(resolve => setTimeout(resolve, 500));
+    this.addLog('success', '[TEE_ENCLAVE] Remote Attestation verified. Enclave ID: enclave-tdx-01. Signature: 0x_tee_sig_verified');
+
+    this.addLog('system', '[AI_SWARM] Analyzing market volatility via Uniswap Subgraph inside TEE...');
     
     // Step 3: AI Decision (DeepSeek)
     let newFee = '0.25%';

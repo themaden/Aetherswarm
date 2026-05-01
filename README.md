@@ -28,7 +28,7 @@ The following table breaks down the core components integrated into the AetherSw
 | **0G Storage** | Persistence | **Decentralized Memory:** Storing model checkpoints and agent state proofs with high throughput (2 GB/s). |
 | **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Peer-to-peer agent discovery and encrypted communication via Yggdrasil/TLS. |
 | **Uniswap v4** | Execution | **SwarmHook:** Dynamic fee adjustments and MEV (Sandwich) protection via `beforeSwap` callbacks. |
-| **ERC-7857** | Ownership | **Intelligent NFT (iNFT):** Encapsulated agent ownership with re-encryption keys for metadata security. |
+| **ERC-7857** | Ownership | **Intelligent NFT (iNFT):** Secure AI model ownership with simulated TEE re-encryption on transfer. |
 | **DeepSeek AI** | Intelligence | **Neural Engine:** High-performance LLM for real-time market sentiment and volatility analysis. |
 
 ---
