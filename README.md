@@ -32,22 +32,44 @@ The following table breaks down the core components integrated into the AetherSw
 
 ---
 
-## 🕸 System Architecture (Ghost Swarm)
-
 ```mermaid
-flowchart TD
-    User((User/Investor)) -- "Deposit ETH" --> Vault[AetherSwarm Vault]
-    Vault -- "Trigger Event" --> Listener[Web3 Listener]
-    Listener -- "Notify" --> Swarm[Ghost Swarm Enclave]
-    
-    subgraph "0G Labs & TEE Environment"
-    Swarm -- "Fetch Context" --> DeepSeek[DeepSeek LLM Engine]
-    DeepSeek -- "Generate Decision" --> Decision[Signed Trade Signal]
-    Decision -- "Anchor Proof" --> OGStorage[0G Storage]
+flowchart TB
+    subgraph Frontend [Frontend - Next.js & Wagmi]
+        UI[Dashboard & Terminal]
+        Wagmi[Wagmi / Viem]
+        Gallery[iNFT Gallery]
     end
-    
-    Decision -- "Update Fee" --> Hook[Uniswap v4 Hook]
-    Hook -- "Protect Pool" --> LP[Liquidity Provider]
+
+    subgraph Backend [Backend - Node.js API]
+        API[Express REST API]
+        Listener[Web3 Event Listener]
+        AILoop[DeepSeek AI Loop Service]
+    end
+
+    subgraph Contracts [Smart Contracts - Solidity]
+        Vault[AetherSwarmVault.sol]
+        iNFT[AetherSwarmiNFT.sol]
+        Hook[MockSwarmHook.sol]
+    end
+
+    subgraph Partners [Infrastructure Partners]
+        OG[0G Labs Storage & TEE]
+        Gensyn[Gensyn AXL Mesh]
+        DeepSeek[DeepSeek AI Engine]
+    end
+
+    %% Interactions
+    User((User)) -->|Connect Wallet| Wagmi
+    User -->|Interaction| UI
+    Wagmi -->|Deposit ETH| Vault
+    Vault -.->|Emit Deposited Event| Listener
+    Listener -->|Trigger| AILoop
+    AILoop -->|Analyze Market| DeepSeek
+    AILoop -->|Store Proof| OG
+    AILoop -->|Sync State| Gensyn
+    API -->|Provide Logs & Data| UI
+    AILoop -->|Decision Result| Hook
+    Hook -->|Update Fee| Vault
 ```
 
 ---
