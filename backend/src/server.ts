@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { aiLoopService } from "./services/aiLoop";
+import { web3ListenerService } from "./services/web3Listener";
 
 const express = require("express");
 
@@ -44,6 +46,10 @@ const transactions = [
 
 app.get("/api/health", (_req: any, res: any) => {
   res.json({ ok: true, service: "aetherswarm-api", timestamp: Date.now() });
+});
+
+app.get("/api/logs", (_req: any, res: any) => {
+  res.json({ logs: aiLoopService.getLogs() });
 });
 
 app.get("/api/agents", (_req: any, res: any) => {
@@ -151,9 +157,17 @@ app.get("/api/tee/attestation", (_req: any, res: any) => {
   });
 });
 
+app.post("/api/test/trigger-loop", (req: any, res: any) => {
+  aiLoopService.triggerAiCycle("0.1", "0xYourWalletAddress123");
+  res.json({ success: true, message: "AI cycle triggered manually." });
+});
+
 app.use((req: any, res: any) => {
   res.status(404).json({ error: `No route for ${req.method} ${req.path}` });
 });
+
+// Initialize Blockchain Listener
+web3ListenerService.initialize();
 
 const server = app.listen(port, () => {
   console.log(`AetherSwarm API listening on http://localhost:${port}`);
