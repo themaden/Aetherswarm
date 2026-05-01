@@ -24,9 +24,9 @@ The following table breaks down the core components integrated into the AetherSw
 | Component | Integration Layer | Functional Role |
 | :--- | :--- | :--- |
 | **x402 Protocol** | Economy | **Autonomous Payments:** AI agents pay for API resources via HTTP 402 status flow. |
-| **0G deAIOS** | Compute (TEE) | **Sealed Inference:** Hardware-based isolation (Intel TDX) for proprietary strategy execution. |
-| **0G Storage** | Persistence | **Decentralized Memory:** Storing model checkpoints and agent state proofs with high throughput (2 GB/s). |
-| **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Peer-to-peer agent discovery and encrypted communication via Yggdrasil/TLS. |
+| **0G deAIOS** | Compute (TEE) | **Sealed Inference:** Hardware-based isolation (Intel TDX) with Remote Attestation verification. |
+| **0G Storage** | Persistence | **Decentralized Memory:** Storing model checkpoints and agent state proofs with cryptographic CIDs. |
+| **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Peer-to-peer agent discovery and mesh communication. |
 | **Uniswap v4** | Execution | **SwarmHook:** Dynamic fee adjustments and MEV (Sandwich) protection via `beforeSwap` callbacks. |
 | **ERC-7857** | Ownership | **Intelligent NFT (iNFT):** Secure AI model ownership with simulated TEE re-encryption on transfer. |
 | **DeepSeek AI** | Intelligence | **Neural Engine:** High-performance LLM for real-time market sentiment and volatility analysis. |
