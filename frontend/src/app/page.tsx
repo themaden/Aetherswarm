@@ -27,26 +27,26 @@ export default function AetherSwarmPremium() {
     // Fetch Backend Data
     const fetchData = async () => {
       try {
-        const [portfolioRes, hookRes, transRes] = await Promise.all([
+        const [portfolioRes, hookRes, logsRes] = await Promise.all([
           fetch('http://localhost:3001/api/portfolio'),
           fetch('http://localhost:3001/api/execution/hooks'),
-          fetch('http://localhost:3001/api/transactions')
+          fetch('http://localhost:3001/api/logs')
         ]);
         
         const portfolioData = await portfolioRes.json();
         const hookInfo = await hookRes.json();
-        const transData = await transRes.json();
+        const logsData = await logsRes.json();
         
         setPortfolio(portfolioData);
         setHookData(hookInfo.hook);
-        setLogs(transData.transactions);
+        setLogs(logsData.logs);
       } catch (error) {
         console.error("Backend fetch error:", error);
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 10000); // Update every 10s
+    const interval = setInterval(fetchData, 2000); // Update every 2s for fast terminal feel
     return () => clearInterval(interval);
   }, []);
 
@@ -220,22 +220,21 @@ export default function AetherSwarmPremium() {
             </div>
             <div className="space-y-3 h-64 overflow-y-auto font-mono text-sm custom-scrollbar bg-black/30 rounded-xl p-4 border border-white/[0.04]">
               {logs.length > 0 ? (
-                logs.map((log: any, idx: number) => (
+                logs.map((log: any) => (
                   <LogEntry 
                     key={log.id} 
-                    time={`${14 + idx}:02:15`} 
-                    type={log.status === 'Confirmed' ? 'success' : 'system'} 
-                    text={`Swarm Execution: Swap ${log.amount} on ${log.pair} | Fee: ${log.fee}`} 
+                    time={log.time} 
+                    type={log.type} 
+                    text={log.text} 
                   />
                 ))
               ) : (
-                <>
-                  <LogEntry time="14:02:01" type="system" text="Sealed Inference session initialized via 0G Labs." />
-                  <LogEntry time="14:02:15" type="success" text="Remote Attestation verified. Enclave signature: 0x82f...3c9" />
-                  <LogEntry time="14:02:44" type="system" text="Agent Centinel_01 connected to Gensyn AXL mesh." />
-                </>
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-slate-500 animate-pulse text-xs uppercase tracking-widest">Awaiting Swarm Signals...</span>
+                </div>
               )}
             </div>
+
           </section>
 
           {/* AGENT FLEET DISPLAY */}

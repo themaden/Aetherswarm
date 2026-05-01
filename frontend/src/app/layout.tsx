@@ -5,6 +5,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 import MobileNav from '../components/layout/MobileNav';
+import NetworkWarning from '../components/shared/NetworkWarning';
 
 import { Providers } from '../components/shared/Providers';
 
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body suppressHydrationWarning className={`${inter.variable} ${jetBrainsMono.variable} bg-[#030308] text-slate-300 font-sans selection:bg-blue-500/30 overflow-hidden`}>
         <Providers>
+          <NetworkWarning />
           {/* GLOBAL BACKGROUND EFFECTS */}
           <div className="fixed inset-0 pointer-events-none z-0">
             {/* Primary ambient glow */}
