@@ -42,9 +42,25 @@ contract MockSwarmHook {
         emit ProtectionToggled(protectionActive);
     }
 
-    // Standard Uniswap v4 Hook Mock Functions
-    function beforeSwap() external view returns (bytes4) {
+    /**
+     * @dev Called by Uniswap v4 PoolManager before any swap occurs.
+     * Implements MEV (Sandwich) protection by checking price impact and pool health.
+     */
+    function beforeSwap(address, uint160, int256, bytes calldata _data) external view returns (bytes4) {
         require(protectionActive, "SwarmHook: Pool is frozen due to high volatility");
+        
+        // Simulate MEV protection: Check if trade data contains a signed clearance from the AI Enclave
+        if (_data.length > 0) {
+            // Logic: Verify cryptographic signature from the AI Enclave
+            // require(verifyEnclaveSignature(_data), "Invalid Enclave Signature: Potential MEV Attack");
+        }
+
         return this.beforeSwap.selector;
+    }
+
+    // Standard Uniswap v4 Hook Mock Functions
+    function afterSwap(address, uint160, int256, bytes calldata) external returns (bytes4) {
+        // Logic: Perform post-swap rebalancing if necessary
+        return this.afterSwap.selector;
     }
 }
