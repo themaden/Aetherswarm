@@ -32,7 +32,8 @@ export default function INFTGalleryGrid() {
       name: `Aether_Agent_${i + 1}`,
       type: i % 2 === 0 ? 'Strategy Master' : 'Hook Guardian',
       memory: `QmX8...${i}v2`,
-      health: `${95 + (i % 5)}%`
+      health: `${95 + (i % 5)}%`,
+      imageIndex: (i % 3) + 1
     }));
   }, [agentCount]);
 
@@ -62,6 +63,7 @@ export default function INFTGalleryGrid() {
           type={agent.type}
           memory={agent.memory}
           health={agent.health}
+          imageIndex={agent.imageIndex}
         />
       ))}
     </div>

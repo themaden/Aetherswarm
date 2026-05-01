@@ -1,5 +1,5 @@
 import React from 'react';
-import { Brain, Database, HardDrive, ShieldCheck } from 'lucide-react';
+import { Database, HardDrive, ShieldCheck } from 'lucide-react';
 
 interface INFTCardProps {
   id: string;
@@ -7,22 +7,33 @@ interface INFTCardProps {
   type: string;
   memory: string;
   health: string;
+  imageIndex: number;
 }
 
-export default function INFTCard({ id, name, type, memory, health }: INFTCardProps) {
+export default function INFTCard({ id, name, type, memory, health, imageIndex }: INFTCardProps) {
   return (
     <div className="group relative bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-500 hover-lift">
       {/* AGENT AVATAR AREA */}
       <div className="h-48 bg-gradient-to-br from-blue-900/30 via-slate-900/40 to-emerald-900/30 flex items-center justify-center relative overflow-hidden">
         {/* Animated background grid */}
         <div className="absolute inset-0 dot-grid opacity-40"></div>
+        
+        {/* Generated AI Image */}
+        <div className="absolute inset-0 z-10 p-4 flex items-center justify-center">
+          <div className="relative w-full h-full rounded-xl overflow-hidden border border-white/[0.1] shadow-2xl group-hover:border-emerald-500/50 transition-all duration-500 group-hover:scale-105">
+            <img 
+              src={`/agents/agent${imageIndex}.png`} 
+              alt={name} 
+              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#030308] via-transparent to-transparent opacity-80"></div>
+          </div>
+        </div>
+
         {/* Ambient glow */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#030308] via-transparent to-transparent"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-emerald-500/[0.08] blur-[60px] rounded-full group-hover:bg-emerald-500/[0.15] transition-all duration-700"></div>
         
-        <Brain size={56} className="text-emerald-400/70 group-hover:text-emerald-400 group-hover:scale-110 transition-all duration-500 relative z-10 drop-shadow-lg" />
-        
-        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-lg text-[10px] font-bold text-white border border-white/[0.08]">
+        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xl px-3 py-1.5 rounded-lg text-[10px] font-bold text-white border border-white/[0.08] z-20">
           ID: {id}
         </div>
       </div>
