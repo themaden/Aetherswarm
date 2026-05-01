@@ -14,6 +14,7 @@ contract AetherSwarmVault is ReentrancyGuard {
     mapping(bytes32 => mapping(address => bool)) private _roles;
 
     event StrategyRootUpdated(bytes32 newRoot);
+    event Deposited(address indexed user, uint256 amount);
 
     modifier onlyRole(bytes32 role) {
         _onlyRole(role);
@@ -36,10 +37,12 @@ contract AetherSwarmVault is ReentrancyGuard {
 
     function deposit(address token, uint256 amount) external nonReentrant {
         require(IERC20(token).transferFrom(msg.sender, address(this), amount), "ERC20 transfer failed");
+        emit Deposited(msg.sender, amount);
     }
-
+ 
     function depositETH() external payable nonReentrant {
         require(msg.value > 0, "Amount must be greater than 0");
+        emit Deposited(msg.sender, msg.value);
     }
 
     /**
