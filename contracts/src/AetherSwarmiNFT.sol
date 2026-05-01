@@ -15,6 +15,7 @@ contract AetherSwarmiNFT is ERC721, Ownable {
     // Mapping from tokenId to encrypted AI model state (0G Storage CID)
     mapping(uint256 => string) private _modelCid;
 
+    event MetadataReencrypted(uint256 indexed tokenId, address indexed newOwner);
     event ModelUpdated(uint256 indexed tokenId, string newCid);
 
     constructor(address initialOwner) 
@@ -49,5 +50,16 @@ contract AetherSwarmiNFT is ERC721, Ownable {
     function getModelCid(uint256 tokenId) external view returns (string memory) {
         _requireOwned(tokenId);
         return _modelCid[tokenId];
+    }
+
+    /**
+     * @dev Override transfer logic to simulate TEE re-encryption for the new owner.
+     */
+    function _update(address to, uint256 tokenId, address auth) internal virtual override returns (address) {
+        address from = super._update(to, tokenId, auth);
+        if (from != address(0) && to != address(0)) {
+            emit MetadataReencrypted(tokenId, to);
+        }
+        return from;
     }
 }
