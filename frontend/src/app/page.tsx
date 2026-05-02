@@ -96,7 +96,13 @@ export default function CommandCenter() {
 
   const trigger = async () => {
     setTriggering(true);
-    try { await fetch('http://localhost:3001/api/test/trigger-loop', { method: 'POST' }); } catch { /* */ }
+    try { 
+      await fetch('http://localhost:3001/api/test/trigger-loop', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: address || "0xDisconnected" })
+      }); 
+    } catch { /* */ }
     setTimeout(() => setTriggering(false), 3500);
   };
 

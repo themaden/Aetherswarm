@@ -165,8 +165,10 @@ app.get("/api/tee/attestation", (_req: any, res: any) => {
   });
 });
 
-app.post("/api/test/trigger-loop", (req: any, res: any) => {
-  aiLoopService.triggerAiCycle("0.1", "0xYourWalletAddress123");
+app.post("/api/test/trigger-loop", async (req: any, res: any) => {
+  const balance = await web3ListenerService.getVaultBalance();
+  const userAddr = req.body?.address || "0xYourWalletAddress123";
+  aiLoopService.triggerAiCycle(balance, userAddr);
   res.json({ success: true, message: "AI cycle triggered manually." });
 });
 

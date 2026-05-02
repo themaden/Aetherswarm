@@ -97,7 +97,7 @@ class AILoopService {
 
   public async triggerAiCycle(amount: string, userAddress: string) {
     const shortAddress = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-    this.addLog('action', `[SYSTEM] Liquidity Event: ${amount} ETH from ${shortAddress}`);
+    this.addLog('action', `[SYSTEM] Active Monitoring: Vault TVL is ${amount} ETH | Operator: ${shortAddress}`);
     
     // Step 1: Real-time Market Data Ingestion
     this.addLog('system', '[DATA] Fetching live market conditions from CoinGecko...');

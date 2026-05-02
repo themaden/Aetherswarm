@@ -38,6 +38,17 @@ class Web3ListenerService {
       console.error("Web3Listener: Failed to initialize", error);
     }
   }
+  
+  public async getVaultBalance(): Promise<string> {
+    if (!this.provider || !process.env.VAULT_ADDRESS) return "0.0000";
+    try {
+      const balance = await this.provider.getBalance(process.env.VAULT_ADDRESS);
+      return ethers.formatEther(balance);
+    } catch (error) {
+      console.error("Web3Listener: Failed to get balance", error);
+      return "0.0000";
+    }
+  }
 }
 
 export const web3ListenerService = new Web3ListenerService();
