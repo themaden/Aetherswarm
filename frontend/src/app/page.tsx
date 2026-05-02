@@ -1,7 +1,7 @@
 "use client";
 
 import React, { type ReactNode, useMemo } from 'react';
-import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight } from 'lucide-react';
+import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight, Wallet, Globe, Hash } from 'lucide-react';
 import { useBalance, useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/constants';
@@ -10,76 +10,63 @@ import iNFTABI from '@/abis/AetherSwarmiNFT.json';
 import { sepolia } from 'wagmi/chains';
 
 export default function AetherSwarmPremium() {
-  const { address: accountAddress } = useAccount();
+  const { address: accountAddress, isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [mounted, setMounted] = React.useState(false);
   const [depositAmount, setDepositAmount] = React.useState('');
-  
-  // Backend State
-  const [portfolio, setPortfolio] = React.useState<any>(null);
+  const [backendStatus, setBackendStatus] = React.useState<'connected' | 'disconnected'>('disconnected');
+
   const [hookData, setHookData] = React.useState<any>(null);
   const [logs, setLogs] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     setMounted(true);
-    
-    // Fetch Backend Data
     const fetchData = async () => {
       try {
-        const [portfolioRes, hookRes, logsRes] = await Promise.all([
-          fetch('http://localhost:3001/api/portfolio'),
+        const [hookRes, logsRes] = await Promise.all([
           fetch('http://localhost:3001/api/execution/hooks'),
           fetch('http://localhost:3001/api/logs')
         ]);
-        
-        const portfolioData = await portfolioRes.json();
         const hookInfo = await hookRes.json();
         const logsData = await logsRes.json();
-        
-        setPortfolio(portfolioData);
         setHookData(hookInfo.hook);
-        setLogs(logsData.logs);
+        setLogs(logsData.logs || []);
+        setBackendStatus('connected');
       } catch (error) {
         console.error("Backend fetch error:", error);
+        setBackendStatus('disconnected');
       }
     };
-
     fetchData();
-    const interval = setInterval(fetchData, 2000); // Update every 2s for fast terminal feel
+    const interval = setInterval(fetchData, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  // 1. Fetch Vault TVL
+  // On-chain data
   const { data: vaultBalance, refetch: refetchVaultBalance } = useBalance({
     address: CONTRACT_ADDRESSES.VAULT.SEPOLIA as `0x${string}`,
-    query: {
-      enabled: mounted,
-    }
+    query: { enabled: mounted }
   });
 
-  // 2. Fetch User's Agent Count
+  const { data: userBalance } = useBalance({
+    address: accountAddress,
+    query: { enabled: mounted && !!accountAddress }
+  });
+
   const { data: agentCount, refetch: refetchAgents } = useReadContract({
     address: CONTRACT_ADDRESSES.NFT.SEPOLIA as `0x${string}`,
     abi: iNFTABI,
     functionName: 'balanceOf',
     args: accountAddress ? [accountAddress] : undefined,
-    query: {
-      enabled: mounted && !!accountAddress && chainId === sepolia.id,
-    }
+    query: { enabled: mounted && !!accountAddress && chainId === sepolia.id }
   });
 
-  // 3. Transactions
   const { data: mintHash, writeContract: writeMint, isPending: isMintPending } = useWriteContract();
   const { data: depositHash, writeContract: writeDeposit, isPending: isDepositPending } = useWriteContract();
+  const { isLoading: isMintConfirming, isSuccess: isMintConfirmed } = useWaitForTransactionReceipt({ hash: mintHash });
+  const { isLoading: isDepositConfirming, isSuccess: isDepositConfirmed } = useWaitForTransactionReceipt({ hash: depositHash });
 
-  const { isLoading: isMintConfirming, isSuccess: isMintConfirmed } = 
-    useWaitForTransactionReceipt({ hash: mintHash });
-
-  const { isLoading: isDepositConfirming, isSuccess: isDepositConfirmed } = 
-    useWaitForTransactionReceipt({ hash: depositHash });
-
-  // Refetch when transactions are successful
   React.useEffect(() => {
     if (isMintConfirmed) refetchAgents();
     if (isDepositConfirmed) {
@@ -111,200 +98,153 @@ export default function AetherSwarmPremium() {
   const formattedTVL = useMemo(() => {
     if (!mounted || !vaultBalance) return "0.0000 ETH";
     const val = parseFloat(formatEther(vaultBalance.value));
-    return `${isNaN(val) ? '0.0000' : val.toFixed(4)} ${vaultBalance.symbol}`;
+    return `${val.toFixed(4)} ETH`;
   }, [vaultBalance, mounted]);
 
+  const formattedUserBalance = useMemo(() => {
+    if (!mounted || !userBalance) return "—";
+    const val = parseFloat(formatEther(userBalance.value));
+    return `${val.toFixed(4)} ETH`;
+  }, [userBalance, mounted]);
+
   const formattedAgents = useMemo(() => {
-    if (!mounted || agentCount === undefined || agentCount === null) return "0 Nodes";
-    return `${agentCount.toString()} Nodes`;
+    if (!mounted || agentCount === undefined || agentCount === null) return "0";
+    return agentCount.toString();
   }, [agentCount, mounted]);
 
-  if (!mounted) return null;
+  const shortAddress = accountAddress ? `${accountAddress.slice(0, 6)}...${accountAddress.slice(-4)}` : '—';
 
+  if (!mounted) return null;
   const isWrongNetwork = accountAddress && chainId !== sepolia.id;
 
   return (
-    <div className="space-y-8">
-      
-      {/* WRONG NETWORK WARNING */}
+    <div className="space-y-6">
+
+      {/* WRONG NETWORK */}
       {isWrongNetwork && (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between animate-pulse">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-amber-500 rounded-full shadow-[0_0_8px_rgba(245,158,11,0.6)]"></div>
-            <p className="text-sm text-amber-200/80 font-medium">
-              You are connected to the wrong network. Please switch to <span className="font-bold text-white">Sepolia Testnet</span> to continue.
-            </p>
-          </div>
-          <button 
-            onClick={() => switchChain({ chainId: sepolia.id })}
-            className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95"
-          >
-            Switch to Sepolia
-          </button>
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between">
+          <p className="text-sm text-amber-200/80 font-medium">Yanlış ağ! <span className="font-bold text-white">Sepolia Testnet</span> ağına geçin.</p>
+          <button onClick={() => switchChain({ chainId: sepolia.id })} className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2 rounded-lg">Ağı Değiştir</button>
         </div>
       )}
-      
-      {/* PAGE HEADER */}
-      <div className="fade-in-up flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
-            Command Center
-          </h1>
-          <p className="text-slate-500 text-sm">Real-time overview of AetherSwarm protocol operations.</p>
+
+      {/* USER STATUS BAR - Her şey açık ve net */}
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <StatusItem icon={<Wallet size={14} />} label="Cüzdan" value={isConnected ? shortAddress : 'Bağlı Değil'} color={isConnected ? 'text-emerald-400' : 'text-red-400'} />
+          <StatusItem icon={<Globe size={14} />} label="Ağ" value={chainId === sepolia.id ? 'Sepolia' : `Chain #${chainId}`} color={chainId === sepolia.id ? 'text-emerald-400' : 'text-amber-400'} />
+          <StatusItem icon={<Activity size={14} />} label="Bakiye" value={formattedUserBalance} color="text-blue-400" />
+          <StatusItem icon={<Cpu size={14} />} label="Backend" value={backendStatus === 'connected' ? 'Bağlı' : 'Bağlantı Yok'} color={backendStatus === 'connected' ? 'text-emerald-400' : 'text-red-400'} />
+          <StatusItem icon={<ShieldCheck size={14} />} label="Ajan Sayısı" value={formattedAgents} color="text-purple-400" />
         </div>
-        
-        {/* MINT BUTTON */}
-        <button 
-          onClick={handleMintAgent}
-          disabled={isMintPending || isMintConfirming || !accountAddress || isWrongNetwork}
-          className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-5 py-2.5 text-xs font-bold text-white flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
-        >
-          <Zap size={14} className={isMintPending || isMintConfirming ? 'animate-pulse text-yellow-400' : 'text-blue-400'} />
-          {isMintPending || isMintConfirming ? 'Initializing Neural Link...' : 'Deploy New Agent'}
-        </button>
       </div>
 
-      {/* HEADER STATS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 fade-in-up fade-in-up-1">
-        <StatCard 
-          title="Vault TVL" 
-          value={formattedTVL} 
-          change={isDepositConfirmed ? "Updated" : "+0.0%"} 
-          icon={<Activity size={20} />}
-          iconColor="text-blue-400"
-          glowColor="from-blue-500/10"
-        />
-        <StatCard 
-          title="My Agents" 
-          value={formattedAgents} 
-          change={isMintConfirmed ? "Updated" : "Live"} 
-          icon={<Cpu size={20} />}
-          iconColor="text-emerald-400"
-          glowColor="from-emerald-500/10"
-        />
-        <StatCard 
-          title="Security Level" 
-          value={portfolio ? `${portfolio.apy}% APY` : "TEE-Verified"} 
-          change={portfolio ? "Lvl 4" : "Lvl 4"} 
-          icon={<ShieldCheck size={20} />}
-          iconColor="text-purple-400"
-          glowColor="from-purple-500/10"
-        />
+      {/* HEADER */}
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tight mb-1">AetherSwarm <span className="text-blue-500">Dashboard</span></h1>
+          <p className="text-slate-500 text-sm">Tüm veriler blockchain ve backend&apos;den canlı olarak çekiliyor.</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={async () => {
+              try { await fetch('http://localhost:3001/api/test/trigger-loop', { method: 'POST' }); }
+              catch (e) { console.error(e); }
+            }}
+            className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-5 py-3 rounded-xl uppercase tracking-widest flex items-center gap-2 border border-blue-400/30 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+          >
+            <Activity size={14} className="animate-pulse" /> AI Döngüsünü Başlat
+          </button>
+          <button onClick={handleMintAgent} disabled={isMintPending || isMintConfirming || !accountAddress || isWrongNetwork} className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-5 py-3 text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-30 active:scale-95">
+            <Zap size={14} className={isMintPending || isMintConfirming ? 'animate-pulse text-yellow-400' : 'text-emerald-400'} /> Ajan Oluştur
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* LEFT COLUMN: TERMINAL & MONITOR */}
-        <div className="lg:col-span-8 space-y-6 fade-in-up fade-in-up-2">
-          <section className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 backdrop-blur-sm relative overflow-hidden group hover:border-white/[0.1] transition-all duration-300">
-            {/* Subtle scan line effect */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-              <div className="absolute inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" style={{ animation: 'scan-line 3s linear infinite' }}></div>
-            </div>
-            
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="flex items-center gap-2.5 font-bold text-white text-sm">
-                <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/10">
-                  <TerminalIcon size={14} className="text-blue-400" />
-                </div>
-                Live Intelligence Feed
-              </h3>
+      {/* LIVE STATS - Backend'den gelen gerçek veriler */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <StatCard title="Kasa TVL (Vault)" value={formattedTVL} subtitle={`Kontrat: ${CONTRACT_ADDRESSES.VAULT.SEPOLIA.slice(0, 10)}...`} icon={<Activity size={20} />} iconColor="text-blue-400" />
+        <StatCard title="Dinamik Ücret (Hook)" value={hookData ? hookData.dynamicFee : '—'} subtitle={hookData ? `Mod: ${hookData.protectionMode}` : 'Backend bekleniyor...'} icon={<Zap size={20} />} iconColor="text-yellow-400" />
+        <StatCard title="Kasa Durumu" value={hookData ? hookData.status : '—'} subtitle={hookData ? `Hook: ${hookData.name}` : 'Backend bekleniyor...'} icon={<ShieldCheck size={20} />} iconColor="text-emerald-400" />
+      </div>
+
+      {/* MAIN CONTENT */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* AI TERMINAL - Backend'den canlı loglar */}
+        <div className="lg:col-span-8">
+          <section className="bg-black/50 border border-white/[0.08] rounded-2xl p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <span className="text-[9px] font-semibold text-slate-600 uppercase tracking-wider">Terminal</span>
-                <div className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500/60 border border-red-500/30"></span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60 border border-yellow-500/30"></span>
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500/60 border border-green-500/30"></span>
-                </div>
+                <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
+                <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+                <span className="ml-2 text-xs text-slate-500 font-mono">ai-neural-loop</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${backendStatus === 'connected' ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-red-400'}`}></div>
+                <span className="text-[10px] text-slate-500 font-mono">{backendStatus === 'connected' ? 'LIVE' : 'OFFLINE'}</span>
               </div>
             </div>
-            <div className="space-y-3 h-64 overflow-y-auto font-mono text-sm custom-scrollbar bg-black/30 rounded-xl p-4 border border-white/[0.04]">
+            <div className="space-y-2 h-[380px] overflow-y-auto font-mono text-xs custom-scrollbar">
               {logs.length > 0 ? (
-                logs.map((log: any) => (
-                  <LogEntry 
-                    key={log.id} 
-                    time={log.time} 
-                    type={log.type} 
-                    text={log.text} 
-                  />
-                ))
+                logs.map((log: any) => {
+                  const isDecision = log.text.includes('AI_DECISION');
+                  const isProof = log.text.includes('PROOF');
+                  const isData = log.text.includes('DATA');
+                  const isError = log.text.includes('FAIL') || log.text.includes('ERROR');
+
+                  return (
+                    <div key={log.id} className={`px-3 py-2 rounded-lg ${isDecision ? 'bg-yellow-500/10 border-l-2 border-yellow-500' : isProof ? 'bg-purple-500/10 border-l-2 border-purple-500' : ''}`}>
+                      <span className="text-slate-600 mr-3">[{log.time}]</span>
+                      <span className={`${
+                        isDecision ? 'text-yellow-400 font-bold' :
+                        isProof ? 'text-purple-400 font-bold' :
+                        isData ? 'text-blue-400' :
+                        isError ? 'text-red-400' :
+                        'text-slate-400'
+                      }`}>{log.text}</span>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <span className="text-slate-500 animate-pulse text-xs uppercase tracking-widest">Awaiting Swarm Signals...</span>
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-600">
+                  <TerminalIcon size={24} />
+                  <span className="text-xs">AI döngüsü bekleniyor... &quot;AI Döngüsünü Başlat&quot; butonuna basın.</span>
                 </div>
               )}
             </div>
-
           </section>
-
-          {/* AGENT FLEET DISPLAY */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AgentCard name="Centinel_01" role="Analysis" status="Active" uptime="99.7%" />
-            <AgentCard name="Executor_Alpha" role="Execution" status="Active" uptime="98.2%" />
-          </div>
         </div>
 
-        {/* RIGHT COLUMN: ACTIONS */}
-        <div className="lg:col-span-4 space-y-6 fade-in-up fade-in-up-3">
-          <div className="bg-gradient-to-br from-blue-600/[0.12] via-blue-500/[0.06] to-emerald-500/[0.08] border border-white/[0.08] rounded-2xl p-7 backdrop-blur-xl relative overflow-hidden group">
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 p-4 opacity-[0.04] group-hover:opacity-[0.08] transition-opacity duration-500">
-              <Zap size={120} />
-            </div>
-            <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-blue-500/20 via-emerald-500/10 to-transparent"></div>
-            
-            <h2 className="text-xl font-extrabold text-white mb-1.5 relative z-10">Supply Assets</h2>
-            <p className="text-slate-500 text-xs mb-7 relative z-10 leading-relaxed">Contribute to the swarm intelligence pool and earn yield.</p>
-            
-            <div className="space-y-5 relative z-10">
+        {/* DEPOSIT PANEL */}
+        <div className="lg:col-span-4 space-y-5">
+          <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
+            <h2 className="text-lg font-bold text-white mb-1">Kasaya Yatır</h2>
+            <p className="text-slate-500 text-xs mb-6">Sepolia ETH yatırarak AI fonuna likidite sağla.</p>
+            <div className="space-y-4">
               <div>
-                <div className="flex justify-between text-[10px] mb-2.5">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider">Amount in ETH</span>
-                  <span className="text-blue-400 font-bold cursor-pointer hover:text-blue-300 transition-colors">MAX</span>
-                </div>
-                <input 
-                  type="number" 
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder="0.00" 
-                  className="w-full bg-black/40 border border-white/[0.08] rounded-xl py-4 px-5 text-xl font-bold text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-500/50 focus:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all duration-300" 
-                />
+                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2 block">Miktar (ETH)</label>
+                <input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="0.01" className="w-full bg-black/40 border border-white/[0.1] rounded-xl py-4 px-5 text-xl font-bold text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-500/50 transition-all" />
               </div>
-
-              {/* Quick amount buttons */}
-              <div className="flex gap-2">
-                {['0.01', '0.05', '0.1', '0.5'].map((amt) => (
-                  <button 
-                    key={amt} 
-                    onClick={() => setDepositAmount(amt)}
-                    className="flex-1 text-[10px] font-bold text-slate-500 bg-white/[0.03] border border-white/[0.06] py-2 rounded-lg hover:bg-white/[0.06] hover:text-white hover:border-white/[0.12] transition-all duration-200"
-                  >
-                    {amt} ETH
-                  </button>
-                ))}
-              </div>
-              
-              <button 
-                onClick={handleDeposit}
-                disabled={isDepositPending || isDepositConfirming || !accountAddress || !depositAmount || isWrongNetwork}
-                className="w-full bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] group/btn relative overflow-hidden disabled:opacity-50"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
-                <span className="relative z-10">
-                  {isDepositPending || isDepositConfirming ? 'Processing Deposit...' : 'Authorize Deposit'}
-                </span>
-                <ChevronRight size={16} className="relative z-10 group-hover/btn:translate-x-1 transition-transform duration-200" />
+              <button onClick={handleDeposit} disabled={isDepositPending || isDepositConfirming || !accountAddress || !depositAmount || isWrongNetwork} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-sm disabled:opacity-30">
+                {isDepositPending || isDepositConfirming ? 'İşleniyor...' : 'Yatır'} <ChevronRight size={16} />
               </button>
             </div>
           </div>
 
-          {/* QUICK STATS MINI CARD */}
-          <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 space-y-4">
-            <h4 className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.15em]">Pool Metrics</h4>
-            <div className="space-y-3">
-              <MiniStat label="Current APY" value="14.2%" color="text-emerald-400" />
-              <MiniStat label="Pool Utilization" value="73%" color="text-blue-400" />
-              <MiniStat label="Risk Score" value="Low" color="text-emerald-400" />
+          {/* CONTRACT ADDRESSES - Şeffaflık */}
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Kontrat Adresleri</h4>
+            <div className="space-y-3 font-mono text-[10px]">
+              <div>
+                <span className="text-slate-600 block mb-1">Vault:</span>
+                <span className="text-blue-400 break-all">{CONTRACT_ADDRESSES.VAULT.SEPOLIA}</span>
+              </div>
+              <div>
+                <span className="text-slate-600 block mb-1">iNFT:</span>
+                <span className="text-emerald-400 break-all">{CONTRACT_ADDRESSES.NFT.SEPOLIA}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -313,111 +253,37 @@ export default function AetherSwarmPremium() {
   );
 }
 
-// HELPER COMPONENTS
+// --- HELPER COMPONENTS ---
+
+function StatusItem({ icon, label, value, color }: { icon: ReactNode; label: string; value: string; color: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-slate-600">{icon}</div>
+      <div>
+        <div className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">{label}</div>
+        <div className={`text-xs font-bold ${color}`}>{value}</div>
+      </div>
+    </div>
+  );
+}
+
 interface StatCardProps {
   title: string;
   value: string;
-  change: string;
+  subtitle: string;
   icon: ReactNode;
   iconColor: string;
-  glowColor: string;
 }
 
-function StatCard({ title, value, change, icon, iconColor, glowColor }: StatCardProps) {
+function StatCard({ title, value, subtitle, icon, iconColor }: StatCardProps) {
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] p-6 rounded-2xl hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-300 group relative overflow-hidden hover-lift">
-      {/* Subtle gradient overlay on hover */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${glowColor} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-      
-      <div className="flex justify-between items-start mb-4 relative z-10">
-        <div className={`p-2.5 bg-white/[0.04] rounded-xl border border-white/[0.06] group-hover:border-white/[0.12] transition-colors duration-300 ${iconColor}`}>
-          {icon}
-        </div>
-        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg ${
-          change.includes('+') 
-            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/10' 
-            : 'bg-blue-500/10 text-blue-400 border border-blue-500/10'
-        }`}>
-          {change}
-        </span>
+    <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl transition-all duration-300 hover:border-white/[0.12]">
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`p-2 bg-white/[0.04] rounded-lg ${iconColor}`}>{icon}</div>
+        <h4 className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{title}</h4>
       </div>
-      <h4 className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.15em] mb-1.5 relative z-10">{title}</h4>
-      <p className="text-2xl font-extrabold text-white relative z-10">{value}</p>
-    </div>
-  );
-}
-
-type LogEntryType = 'system' | 'success' | 'warning' | 'action';
-
-interface LogEntryProps {
-  time: string;
-  type: LogEntryType;
-  text: string;
-}
-
-function LogEntry({ time, type, text }: LogEntryProps) {
-  const colors: Record<LogEntryType, string> = {
-    system: "text-slate-500",
-    success: "text-emerald-400",
-    warning: "text-amber-400",
-    action: "text-blue-400"
-  };
-  const dotColors: Record<LogEntryType, string> = {
-    system: "bg-slate-600",
-    success: "bg-emerald-500",
-    warning: "bg-amber-500",
-    action: "bg-blue-500"
-  };
-  return (
-    <div className="flex gap-3 items-start leading-relaxed hover:bg-white/[0.02] px-2 py-1.5 rounded-lg transition-colors duration-150">
-      <span className="text-[10px] text-slate-700 font-semibold mt-0.5 shrink-0 font-mono">[{time}]</span>
-      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${dotColors[type] || 'bg-slate-600'}`}></div>
-      <span className={`text-xs ${colors[type] || 'text-slate-300'} leading-relaxed`}>{text}</span>
-    </div>
-  );
-}
-
-interface AgentCardProps {
-  name: string;
-  role: string;
-  status: string;
-  uptime?: string;
-}
-
-function AgentCard({ name, role, status, uptime }: AgentCardProps) {
-  return (
-    <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl flex items-center justify-between group hover:border-white/[0.12] hover:bg-white/[0.03] transition-all duration-300 hover-lift">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-blue-500/[0.08] rounded-xl flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300">
-          <Cpu size={18} />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-white">{name}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-[10px] text-slate-600 uppercase tracking-wider">{role}</p>
-            {uptime && <p className="text-[10px] text-emerald-500/60 font-mono">↑{uptime}</p>}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_6px_rgba(52,211,153,0.6)]"></div>
-        <span className="text-[10px] font-bold text-emerald-400">{status}</span>
-      </div>
-    </div>
-  );
-}
-
-interface MiniStatProps {
-  label: string;
-  value: string;
-  color: string;
-}
-
-function MiniStat({ label, value, color }: MiniStatProps) {
-  return (
-    <div className="flex justify-between items-center">
-      <span className="text-[11px] text-slate-600">{label}</span>
-      <span className={`text-[13px] font-bold ${color}`}>{value}</span>
+      <p className="text-2xl font-extrabold text-white mb-1">{value}</p>
+      <p className="text-[10px] text-slate-600 font-mono">{subtitle}</p>
     </div>
   );
 }

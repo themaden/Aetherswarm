@@ -10,6 +10,20 @@ const app = express();
 const port = Number(process.env.PORT || 3001);
 
 app.use(express.json());
+
+// --- Global CORS Configuration ---
+app.use((req: any, res: any, next: any) => {
+  res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "http://localhost:3000");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
+
 app.use(x402Middleware);
 
 // --- Simulated Protected AI Data Feed (x402) ---
@@ -27,19 +41,6 @@ app.get("/", (_req: any, res: any) => {
     version: "1.0.0",
     status: "Secure (TEE Encrypted)"
   });
-});
-
-app.use((req: any, res: any, next: any) => {
-  res.setHeader("Access-Control-Allow-Origin", process.env.CORS_ORIGIN || "http://localhost:3000");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  if (req.method === "OPTIONS") {
-    res.sendStatus(204);
-    return;
-  }
-
-  next();
 });
 
 const agents = [
