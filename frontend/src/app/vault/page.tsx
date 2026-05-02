@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Lock, ShieldAlert, CheckCircle2, TrendingUp, Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Lock, ShieldAlert, CheckCircle2, Wallet } from 'lucide-react';
 import { useBalance, useAccount } from 'wagmi';
 import { formatEther } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/constants';
 
 export default function VaultCapitalPage() {
   const { address } = useAccount();
-  const [portfolio, setPortfolio] = useState<any>(null);
-  const [holdings, setHoldings] = useState<any[]>([]);
   const [mounted, setMounted] = useState(false);
 
   const { data: vaultBalance } = useBalance({
@@ -19,33 +17,13 @@ export default function VaultCapitalPage() {
 
   useEffect(() => {
     setMounted(true);
-    const fetch_ = async () => {
-      try {
-        const [pr, hr] = await Promise.all([
-          fetch('http://localhost:3001/api/portfolio'),
-          fetch('http://localhost:3001/api/portfolio/holdings'),
-        ]);
-        setPortfolio(await pr.json());
-        setHoldings((await hr.json()).holdings || []);
-      } catch { /* */ }
-    };
-    fetch_();
-    const iv = setInterval(fetch_, 5000);
-    return () => clearInterval(iv);
   }, []);
 
   const realTVL = mounted && vaultBalance
     ? parseFloat(formatEther(vaultBalance.value)).toFixed(6)
     : '0.000000';
 
-  const holdingColors = ['text-blue-400', 'text-emerald-400', 'text-purple-400', 'text-amber-400'];
-  const holdingBars  = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500'];
-  const holdingGlows = [
-    'shadow-[0_0_8px_rgba(59,130,246,0.5)]',
-    'shadow-[0_0_8px_rgba(16,185,129,0.5)]',
-    'shadow-[0_0_8px_rgba(168,85,247,0.5)]',
-    'shadow-[0_0_8px_rgba(245,158,11,0.5)]',
-  ];
+
 
   return (
     <div className="space-y-6">
@@ -79,46 +57,6 @@ export default function VaultCapitalPage() {
             </div>
           </div>
 
-          {/* ALLOCATION */}
-          <div className="rounded-2xl border border-white/[0.05] bg-white/[0.018] p-6 fade-in-up fade-in-up-2">
-            <div className="flex items-center gap-2 mb-5">
-              <TrendingUp size={15} className="text-blue-400" />
-              <h3 className="text-sm font-black text-white">Portfolio Allocation</h3>
-              <span className="ml-auto text-[9px] font-mono text-slate-700">backend api</span>
-            </div>
-
-            {/* Stacked bar */}
-            <div className="w-full h-3 rounded-full overflow-hidden flex mb-6 gap-0.5">
-              {holdings.map((h: any, i) => (
-                <div key={i} className={`h-full ${holdingBars[i % 4]} ${holdingGlows[i % 4]} transition-all duration-1000`}
-                  style={{ width: `${h.allocation * 100}%` }} />
-              ))}
-            </div>
-
-            <div className="space-y-3">
-              {holdings.map((h: any, i) => (
-                <div key={i} className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-2 h-2 rounded-full ${holdingBars[i % 4]}`} />
-                      <span className="text-xs font-bold text-white">{h.symbol}</span>
-                      <span className="text-[10px] text-slate-600">${h.value.toLocaleString()}</span>
-                    </div>
-                    <span className={`text-xs font-black font-mono ${holdingColors[i % 4]}`}>
-                      {(h.allocation * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-white/[0.04] h-[3px] rounded-full overflow-hidden">
-                    <div className={`h-full ${holdingBars[i % 4]} transition-all duration-1000`}
-                      style={{ width: `${h.allocation * 100}%` }} />
-                  </div>
-                </div>
-              ))}
-              {holdings.length === 0 && (
-                <div className="text-xs text-slate-700 text-center py-4">Connecting to backend...</div>
-              )}
-            </div>
-          </div>
 
           {/* SECURITY CALLOUT */}
           <div className="rounded-2xl border border-cyan-500/10 bg-cyan-500/[0.03] p-5 flex gap-4 items-start fade-in-up fade-in-up-3">
@@ -136,34 +74,6 @@ export default function VaultCapitalPage() {
         {/* RIGHT COL */}
         <div className="lg:col-span-5 space-y-5">
 
-          {/* PERFORMANCE */}
-          <div className="rounded-2xl border border-white/[0.05] bg-white/[0.018] p-6 fade-in-up fade-in-up-1">
-            <div className="flex items-center gap-2 mb-5">
-              <TrendingUp size={15} className="text-emerald-400" />
-              <h3 className="text-sm font-black text-white">Performance</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="rounded-xl bg-black/30 border border-white/[0.04] p-4">
-                <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1.5">Est. APY</p>
-                <p className="text-2xl font-black text-emerald-400">{portfolio?.apy ?? '—'}<span className="text-base ml-0.5">%</span></p>
-              </div>
-              <div className="rounded-xl bg-black/30 border border-white/[0.04] p-4">
-                <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1.5">Total AUM</p>
-                <p className="text-2xl font-black text-white">${portfolio?.totalValue ? (portfolio.totalValue / 1000).toFixed(0) + 'K' : '—'}</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {[
-                { label: '30D Change',  val: `+${portfolio?.monthlyChange ?? '—'}%`, color: 'text-emerald-400', icon: <ArrowUpRight size={11} /> },
-                { label: 'Risk Score',  val: portfolio?.riskScore ?? '—',            color: 'text-blue-400',    icon: <ArrowDownRight size={11} /> },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center py-2 border-b border-white/[0.04]">
-                  <span className="text-[11px] text-slate-600">{r.label}</span>
-                  <span className={`text-[11px] font-black flex items-center gap-1 ${r.color}`}>{r.icon}{r.val}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
           {/* AUDIT STATUS */}
           <div className="rounded-2xl border border-white/[0.05] bg-white/[0.018] p-5 fade-in-up fade-in-up-2">
