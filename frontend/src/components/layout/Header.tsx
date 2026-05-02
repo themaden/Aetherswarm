@@ -10,9 +10,11 @@ export default function Header() {
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [time, setTime] = useState('');
+  const [mounted, setMounted] = useState(false);
+  const [time, setTime] = useState('--:--:--');
 
   useEffect(() => {
+    setMounted(true);
     const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour12: false }));
     tick();
     const id = setInterval(tick, 1000);
@@ -20,6 +22,11 @@ export default function Header() {
   }, []);
 
   const fmt = (addr: string) => `${addr.slice(0, 6)}···${addr.slice(-4)}`;
+
+  // Wallet-dependent values — only use after mount to avoid hydration mismatch
+  const walletConnected = mounted && !!account;
+  const walletConnecting = mounted && isConnecting;
+  const walletLabel = !mounted ? 'Connect Wallet' : walletConnecting ? 'Connecting...' : walletConnected ? fmt(account!) : 'Connect Wallet';
 
   return (
     <header className="h-[72px] border-b flex items-center justify-between px-7 z-30 relative shrink-0"
@@ -65,34 +72,32 @@ export default function Header() {
         {/* Wallet */}
         <div className="relative">
           <button
-            onClick={() => account ? setShowDropdown(s => !s) : connect({ connector: injected() })}
-            disabled={isConnecting}
+            onClick={() => walletConnected ? setShowDropdown(s => !s) : connect({ connector: injected() })}
+            disabled={walletConnecting}
             className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[12px] font-bold text-white transition-all active:scale-[0.97] overflow-hidden group"
             style={{
-              background: account
+              background: walletConnected
                 ? 'rgba(255,255,255,0.04)'
                 : 'linear-gradient(135deg, rgba(59,130,246,0.9), rgba(16,185,129,0.8))',
-              border: account ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
-              boxShadow: account ? 'none' : '0 4px 24px rgba(59,130,246,0.25)',
+              border: walletConnected ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
+              boxShadow: walletConnected ? 'none' : '0 4px 24px rgba(59,130,246,0.25)',
             }}
           >
             {/* Shimmer on gradient */}
-            {!account && (
+            {!walletConnected && (
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
             )}
             <Wallet size={14} className="relative z-10 shrink-0" />
-            <span className="relative z-10">
-              {isConnecting ? 'Connecting...' : account ? fmt(account) : 'Connect Wallet'}
-            </span>
-            {account && <ChevronDown size={12} className={`relative z-10 opacity-50 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />}
+            <span className="relative z-10">{walletLabel}</span>
+            {walletConnected && <ChevronDown size={12} className={`relative z-10 opacity-50 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />}
           </button>
 
-          {account && showDropdown && (
+          {walletConnected && showDropdown && (
             <div className="absolute top-full right-0 mt-2 w-44 rounded-xl border border-white/[0.08] shadow-2xl z-50 overflow-hidden"
               style={{ background: 'rgba(4,4,10,0.98)', backdropFilter: 'blur(20px)' }}>
               <div className="px-4 py-3 border-b border-white/[0.05]">
                 <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-0.5">Connected</p>
-                <p className="text-[11px] text-white font-mono">{fmt(account)}</p>
+                <p className="text-[11px] text-white font-mono">{fmt(account!)}</p>
               </div>
               <button onClick={() => { disconnect(); setShowDropdown(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-[12px] text-slate-400 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors">
