@@ -47,11 +47,7 @@ app.get("/", (_req: any, res: any) => {
   });
 });
 
-const transactions = [
-  { id: "tx-001", pair: "ETH / USDC", amount: "12.5 ETH", fee: "0.35%", status: "Confirmed" },
-  { id: "tx-002", pair: "WBTC / USDC", amount: "0.8 BTC", fee: "0.42%", status: "Confirmed" },
-  { id: "tx-003", pair: "USDC / DAI", amount: "50,000 USDC", fee: "0.05%", status: "Pending" },
-];
+
 
 app.get("/api/health", (_req: any, res: any) => {
   res.json({ ok: true, service: "aetherswarm-api", timestamp: Date.now() });
@@ -119,18 +115,11 @@ app.get("/api/portfolio/performance", (_req: any, res: any) => {
 });
 
 app.get("/api/transactions", (_req: any, res: any) => {
-  res.json({ transactions });
+  res.json({ transactions: aiLoopService.getTransactions() });
 });
 
 app.get("/api/execution/hooks", (_req: any, res: any) => {
-  res.json({
-    hook: {
-      name: "SwarmHook",
-      status: "Active",
-      dynamicFee: "0.42%",
-      protectionMode: "LVR",
-    },
-  });
+  res.json({ hook: aiLoopService.getHookData() });
 });
 
 app.post("/api/vault/deposits", (req: any, res: any) => {

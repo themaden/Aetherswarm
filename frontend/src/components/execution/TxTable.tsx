@@ -101,6 +101,9 @@ export default function TxTable() {
               </td>
             </tr>
           ))}
+          {transactions.length === 0 && (
+            <tr><td colSpan={4} className="py-8 text-center text-slate-700 text-xs">No hook executions yet. Waiting for AI loop trigger...</td></tr>
+          )}
         </tbody>
       </table>
       )}

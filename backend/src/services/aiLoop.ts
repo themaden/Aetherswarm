@@ -17,6 +17,9 @@ class AILoopService {
   private provider: ethers.JsonRpcProvider | null = null;
   private wallet: ethers.Wallet | null = null;
   private teeBroker: SealedInferenceBroker;
+  
+  private transactions: any[] = [];
+  private currentFee: string = "3000 bps";
 
   constructor() {
     this.teeBroker = new SealedInferenceBroker(process.env.ZG_RPC_URL, process.env.ZG_PRIVATE_KEY);
@@ -56,6 +59,19 @@ class AILoopService {
 
   public getLogs() {
     return this.logs;
+  }
+
+  public getTransactions() {
+    return this.transactions;
+  }
+
+  public getHookData() {
+    return {
+      name: "SwarmHook",
+      status: "Active",
+      dynamicFee: this.currentFee,
+      protectionMode: "LVR",
+    };
   }
 
   private generateRandomHex(length: number): string {
@@ -158,6 +174,18 @@ class AILoopService {
     // Step 6: Anchor to 0G Storage
     const cid = `Qm_0G_${this.generateRandomHex(12)}`;
     this.addLog('success', `[0G_STORAGE] Proof and state anchored. CID: ${cid}`);
+
+    // Update real-time states
+    this.currentFee = `${newFee} bps`;
+    this.transactions.unshift({
+      id: `tx-${Math.floor(Math.random() * 10000)}`,
+      pair: "ETH / USDC",
+      amount: `${amount} ETH`,
+      fee: this.currentFee,
+      status: "Confirmed"
+    });
+    
+    if (this.transactions.length > 20) this.transactions.pop();
   }
 }
 

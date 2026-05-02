@@ -137,7 +137,7 @@ export default function HookEnginePage() {
               </tr>
             ))}
             {txs.length === 0 && (
-              <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-700 text-xs">Connecting to backend...</td></tr>
+              <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-700 text-xs">No hook executions yet. Waiting for AI loop trigger...</td></tr>
             )}
           </tbody>
         </table>
