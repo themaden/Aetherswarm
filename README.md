@@ -39,7 +39,7 @@ aetherswarm/
 | **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Real `libp2p` node running TCP/WS mesh with mDNS local peer discovery. |
 | **Uniswap v4** | Execution | **SwarmHook:** Real on-chain dynamic fee updates based on AI's neural market analysis. |
 | **ERC-7857** | Ownership | **Intelligent NFT (iNFT):** Secure AI model ownership with simulated TEE re-encryption on transfer. |
-| **DeepSeek AI** | Intelligence | **Neural Engine:** High-performance LLM for real-time market sentiment and volatility analysis. |
+| **AI** | Intelligence | **Neural Engine:** High-performance LLM for real-time market sentiment and volatility analysis. |
 
 ---
 
@@ -170,16 +170,6 @@ npm run dev
 curl -X POST http://localhost:3001/api/test/trigger-loop
 ```
 *This command triggers the DeepSeek AI engine. Observe real-time logs in the UI showing AI decision, SGX hardware attestation (MRENCLAVE), and blockchain execution.*
-
----
-
-## ⚙️ Environment Configuration
-
-Ensure you have a `.env` file in the `backend/` directory with:
-- `DEEPSEEK_API_KEY`: For AI neural engine.
-- `BACKEND_PRIVATE_KEY`: For autonomous on-chain execution.
-- `BACKEND_SEPOLIA_RPC_URL`: For blockchain connectivity.
-- `ZG_RPC_URL` & `ZG_PRIVATE_KEY`: For 0G Labs integration.
 
 ---
 
