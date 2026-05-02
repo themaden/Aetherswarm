@@ -46,11 +46,11 @@ aetherswarm/
 ```mermaid
 flowchart TB
     %% Users & Identity
-    User((Human / DAO)) -->|Connects Wallet & Signs| UI
+    User(("Human / DAO")) -->|Connects Wallet & Signs| UI
     User -->|ERC-7857 iNFT Ownership| AetherSwarmiNFT
 
     %% Frontend Layer
-    subgraph Frontend [Command Center (Next.js)]
+    subgraph Frontend ["Command Center (Next.js)"]
         direction TB
         UI[Glassmorphism Dashboard]
         Terminal[Real-time Agent Terminal]
@@ -60,12 +60,12 @@ flowchart TB
     end
 
     %% Backend / Agent Layer
-    subgraph GhostSwarmNode [Ghost Swarm Node (Node.js)]
+    subgraph GhostSwarmNode ["Ghost Swarm Node (Node.js)"]
         direction TB
         API[Express REST API]
         Listener[Web3 Event Listener]
         
-        subgraph LibP2P [Gensyn AXL Mesh (libp2p)]
+        subgraph LibP2P ["Gensyn AXL Mesh (libp2p)"]
             MDNS[mDNS Discovery]
             Noise[Noise Encryption]
             Yamux[Yamux Multiplexing]
@@ -78,7 +78,7 @@ flowchart TB
             MarketData --> DeepSeek
         end
 
-        subgraph TEE [0G Labs / SGX Enclave]
+        subgraph TEE ["0G Labs / SGX Enclave"]
             SealedBroker[0G Serving Broker]
             IntelTDX[Intel SGX Attestation Sim]
             SealedBroker -.Fallback.-> IntelTDX
@@ -91,7 +91,7 @@ flowchart TB
     end
 
     %% Smart Contracts Layer
-    subgraph Contracts [On-Chain Execution (Sepolia)]
+    subgraph Contracts ["On-Chain Execution (Sepolia)"]
         direction LR
         Vault[AetherSwarmVault]
         Hook[SwarmHook - Uniswap v4]
@@ -100,12 +100,12 @@ flowchart TB
     end
 
     %% External Connections
-    OtherNodes(((Other Swarm Nodes))) <.->|TCP / WebSockets| LibP2P
+    OtherNodes((("Other Swarm Nodes"))) <.->|TCP / WebSockets| LibP2P
     Wagmi -->|Deposits Funds| Vault
     API -.->|Streams Logs & Agent Data| Terminal
     AILoop -->|x402 Autonomous Payment| Contracts
     AILoop -->|Update Dynamic Fee| Hook
-    TEE -->|Anchor Proof to Storage| 0GStorage[(0G Decentralized Storage)]
+    TEE -->|Anchor Proof to Storage| 0GStorage[("0G Decentralized Storage")]
 
     %% Styling
     classDef ui fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
