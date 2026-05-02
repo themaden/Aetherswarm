@@ -24,9 +24,9 @@ The following table breaks down the core components integrated into the AetherSw
 | Component | Integration Layer | Functional Role |
 | :--- | :--- | :--- |
 | **x402 Protocol** | Economy | **Autonomous Payments:** AI agents execute real Sepolia ETH transfers for API resources. |
-| **0G deAIOS** | Compute (TEE) | **Sealed Inference:** Hardware-based isolation with real-time Remote Attestation logs. |
+| **0G deAIOS** | Compute (TEE) | **Sealed Inference:** `@0glabs/0g-serving-broker` integration with realistic Intel SGX Attestation Quotes. |
 | **0G Storage** | Persistence | **Decentralized Memory:** Verifiable decision proofs anchored to decentralized storage. |
-| **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Distributed agent mesh with peer discovery simulation. |
+| **Gensyn AXL** | Networking (P2P) | **Ghost Swarm:** Real `libp2p` node running TCP/WS mesh with mDNS local peer discovery. |
 | **Uniswap v4** | Execution | **SwarmHook:** Real on-chain dynamic fee updates based on AI's neural market analysis. |
 | **ERC-7857** | Ownership | **Intelligent NFT (iNFT):** Secure AI model ownership with simulated TEE re-encryption on transfer. |
 | **DeepSeek AI** | Intelligence | **Neural Engine:** High-performance LLM for real-time market sentiment and volatility analysis. |
@@ -100,15 +100,28 @@ Unlike traditional centralized AI where model weights are exposed, AetherSwarm u
 
 ## 🚀 Presentation Mode: Quick Start
 
-To demonstrate the "Intelligence Loop" during the presentation:
+To demonstrate the "Intelligence Loop" and the Ghost Swarm mesh during the presentation:
 
-1. **Start the API:** `cd backend && npm run start`
-2. **Start the UI:** `cd frontend && npm run dev`
-3. **Trigger AI Cycle:** 
+1. **Start the API (Ghost Swarm Node):**
+   ```bash
+   cd backend
+   npm install
+   npm run start
+   ```
+   *The node will automatically generate a real `libp2p` Peer ID and listen on random TCP/WS ports. If you run multiple instances on the same network, they will discover each other via mDNS.*
+
+2. **Start the UI (Command Center):**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+3. **Trigger Autonomous AI Cycle:** 
    ```bash
    curl -X POST http://localhost:3001/api/test/trigger-loop
    ```
-   *This command will manually trigger the DeepSeek AI engine to analyze a mock deposit and broadcast the decision to the live terminal.*
+   *This command will manually trigger the DeepSeek AI engine. You will see real-time logs in the UI showing the AI decision, Intel SGX hardware attestation generation (MRENCLAVE), x402 payment, and Hook execution.*
 
 ---
 
