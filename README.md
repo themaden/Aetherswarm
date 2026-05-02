@@ -17,9 +17,19 @@ AetherSwarm is a radical decentralized finance (DeFi) architecture that merges *
 
 ---
 
-## 🛠 Protocol Integration Matrix
+## 📂 Project Structure
 
-The following table breaks down the core components integrated into the AetherSwarm stack and their functional roles:
+```text
+aetherswarm/
+├── frontend/        # Next.js Command Center (UI)
+├── backend/         # Node.js Ghost Swarm Node (P2P & AI)
+├── contracts/       # Solidity Smart Contracts (Uniswap v4 & iNFT)
+└── README.md        # Master documentation
+```
+
+---
+
+## 🛠 Protocol Integration Matrix
 
 | Component | Integration Layer | Functional Role |
 | :--- | :--- | :--- |
@@ -102,26 +112,38 @@ Unlike traditional centralized AI where model weights are exposed, AetherSwarm u
 
 To demonstrate the "Intelligence Loop" and the Ghost Swarm mesh during the presentation:
 
-1. **Start the API (Ghost Swarm Node):**
-   ```bash
-   cd backend
-   npm install
-   npm run start
-   ```
-   *The node will automatically generate a real `libp2p` Peer ID and listen on random TCP/WS ports. If you run multiple instances on the same network, they will discover each other via mDNS.*
+### 1. Start the API (Ghost Swarm Node)
+```bash
+cd backend
+npm install
+npm run start
+```
+*The node will automatically generate a real `libp2p` Peer ID and listen on random TCP/WS ports. It initializes the TEE enclave logic.*
 
-2. **Start the UI (Command Center):**
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+### 2. Start the UI (Command Center)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Navigate to `http://localhost:3000` to see the "Black-Box" dashboard.*
 
-3. **Trigger Autonomous AI Cycle:** 
-   ```bash
-   curl -X POST http://localhost:3001/api/test/trigger-loop
-   ```
-   *This command will manually trigger the DeepSeek AI engine. You will see real-time logs in the UI showing the AI decision, Intel SGX hardware attestation generation (MRENCLAVE), x402 payment, and Hook execution.*
+### 3. Trigger Autonomous AI Cycle
+```bash
+# From a separate terminal
+curl -X POST http://localhost:3001/api/test/trigger-loop
+```
+*This command triggers the DeepSeek AI engine. Observe real-time logs in the UI showing AI decision, SGX hardware attestation (MRENCLAVE), and blockchain execution.*
+
+---
+
+## ⚙️ Environment Configuration
+
+Ensure you have a `.env` file in the `backend/` directory with:
+- `DEEPSEEK_API_KEY`: For AI neural engine.
+- `BACKEND_PRIVATE_KEY`: For autonomous on-chain execution.
+- `BACKEND_SEPOLIA_RPC_URL`: For blockchain connectivity.
+- `ZG_RPC_URL` & `ZG_PRIVATE_KEY`: For 0G Labs integration.
 
 ---
 
