@@ -1,113 +1,106 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Wallet, Bell, Shield, ChevronDown, Wifi, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Wallet, Shield, ChevronDown, LogOut, Radio } from 'lucide-react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 
-/**
- * @title Top Header
- * @dev Manages wallet connection, network status, and system notifications.
- */
 export default function Header() {
   const { address: account, isConnecting } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [time, setTime] = useState('');
 
-  const formatAddress = (addr: string) => {
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
-  };
+  useEffect(() => {
+    const tick = () => setTime(new Date().toLocaleTimeString('en-US', { hour12: false }));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
-  const handleWalletClick = () => {
-    if (account) {
-      setShowDropdown(!showDropdown);
-    } else {
-      connect({ connector: injected() });
-    }
-  };
-
-  const handleDisconnect = () => {
-    disconnect();
-    setShowDropdown(false);
-  };
+  const fmt = (addr: string) => `${addr.slice(0, 6)}···${addr.slice(-4)}`;
 
   return (
-    <header className="h-20 border-b border-white/[0.06] bg-[#030308]/60 backdrop-blur-2xl flex items-center justify-between px-8 z-20 relative">
-      
-      {/* Subtle bottom glow line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
-      
-      {/* LEFT: SYSTEM STATUS */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2.5 bg-emerald-500/[0.08] border border-emerald-500/[0.12] px-4 py-2 rounded-xl">
-          <div className="relative">
-            <Shield size={14} className="text-emerald-400" />
-          </div>
-          <span className="text-[11px] text-slate-400 font-medium">
-            System Security: <span className="text-emerald-400 font-bold">Optimal</span>
-          </span>
+    <header className="h-[72px] border-b flex items-center justify-between px-7 z-30 relative shrink-0"
+      style={{
+        background: 'rgba(2,2,5,0.85)',
+        borderColor: 'rgba(255,255,255,0.04)',
+        backdropFilter: 'blur(20px)',
+      }}>
+
+      {/* Glow line bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/15 to-transparent" />
+
+      {/* ── LEFT ── */}
+      <div className="flex items-center gap-5">
+        {/* Live clock */}
+        <div className="font-mono text-[11px] text-slate-700 tracking-widest hidden lg:block">
+          {time}
         </div>
-        
-        <div className="hidden lg:flex items-center gap-2 text-[11px] text-slate-500">
-          <Wifi size={12} className="text-blue-400" />
-          <span>Latency: <span className="text-blue-400 font-semibold">12ms</span></span>
+
+        <div className="w-px h-4 bg-white/[0.06] hidden lg:block" />
+
+        {/* Security status */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-500/10 bg-emerald-500/[0.04]">
+          <Shield size={12} className="text-emerald-400" />
+          <span className="text-[10px] text-emerald-400/70 font-bold tracking-wider uppercase">TEE Enclave Active</span>
+        </div>
+
+        {/* Broadcast indicator */}
+        <div className="hidden md:flex items-center gap-2 text-[10px] text-slate-700">
+          <Radio size={12} className="text-purple-500 animate-pulse" />
+          <span className="font-mono">Gensyn<span className="text-purple-500"> AXL</span> · Online</span>
         </div>
       </div>
 
-      {/* RIGHT: ACTIONS & WALLET */}
-      <div className="flex items-center gap-4">
-        
-        {/* NOTIFICATIONS */}
-        <button className="relative p-2.5 text-slate-500 hover:text-white transition-all duration-200 rounded-xl hover:bg-white/[0.04] border border-transparent hover:border-white/[0.08]">
-          <Bell size={18} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
-        </button>
-
-        {/* NETWORK BADGE */}
-        <div className="hidden md:flex items-center gap-2.5 bg-white/[0.03] border border-white/[0.08] px-4 py-2 rounded-xl text-[11px] font-semibold text-slate-400 hover:border-purple-500/30 transition-colors duration-200">
-          <div className="w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_6px_rgba(168,85,247,0.7)]"></div>
-          Sepolia Testnet
+      {/* ── RIGHT ── */}
+      <div className="flex items-center gap-3">
+        {/* Network */}
+        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/[0.05] bg-white/[0.02] text-[10px] text-slate-600 font-mono">
+          <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.7)]" />
+          Sepolia · 11155111
         </div>
 
-        {/* WALLET CONNECT BUTTON */}
+        {/* Wallet */}
         <div className="relative">
           <button
-            onClick={handleWalletClick}
+            onClick={() => account ? setShowDropdown(s => !s) : connect({ connector: injected() })}
             disabled={isConnecting}
-            className="flex items-center gap-2.5 bg-gradient-to-r from-blue-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 disabled:from-blue-600/50 disabled:to-emerald-500/50 text-white px-6 py-2.5 rounded-xl text-[13px] font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 active:scale-[0.97] disabled:active:scale-100 group relative overflow-hidden"
+            className="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-[12px] font-bold text-white transition-all active:scale-[0.97] overflow-hidden group"
+            style={{
+              background: account
+                ? 'rgba(255,255,255,0.04)'
+                : 'linear-gradient(135deg, rgba(59,130,246,0.9), rgba(16,185,129,0.8))',
+              border: account ? '1px solid rgba(255,255,255,0.08)' : '1px solid transparent',
+              boxShadow: account ? 'none' : '0 4px 24px rgba(59,130,246,0.25)',
+            }}
           >
-            {/* Shimmer overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-            
-            {isConnecting ? (
-              <>
-                <span className="relative z-10 inline-block animate-spin">⏳</span>
-                <span className="relative z-10">Connecting...</span>
-              </>
-            ) : (
-              <>
-                <Wallet size={15} className="group-hover:rotate-12 transition-transform duration-300 relative z-10" />
-                <span className="relative z-10">{account ? formatAddress(account) : "Connect Wallet"}</span>
-                {account && <ChevronDown size={13} className={`ml-0.5 opacity-60 relative z-10 transition-transform duration-300 ${showDropdown ? 'rotate-180' : ''}`} />}
-              </>
+            {/* Shimmer on gradient */}
+            {!account && (
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.1] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
             )}
+            <Wallet size={14} className="relative z-10 shrink-0" />
+            <span className="relative z-10">
+              {isConnecting ? 'Connecting...' : account ? fmt(account) : 'Connect Wallet'}
+            </span>
+            {account && <ChevronDown size={12} className={`relative z-10 opacity-50 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />}
           </button>
 
-          {/* Disconnect Dropdown */}
           {account && showDropdown && (
-            <div className="absolute top-full right-0 mt-2 bg-[#030308]/95 border border-white/[0.08] rounded-xl shadow-xl backdrop-blur-xl w-40 z-30 animate-in fade-in slide-in-from-top-2 duration-200">
-              <button
-                onClick={handleDisconnect}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-300 hover:text-red-400 hover:bg-red-500/[0.08] transition-colors duration-200 rounded-xl m-1"
-              >
-                <LogOut size={14} />
-                Disconnect
+            <div className="absolute top-full right-0 mt-2 w-44 rounded-xl border border-white/[0.08] shadow-2xl z-50 overflow-hidden"
+              style={{ background: 'rgba(4,4,10,0.98)', backdropFilter: 'blur(20px)' }}>
+              <div className="px-4 py-3 border-b border-white/[0.05]">
+                <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-0.5">Connected</p>
+                <p className="text-[11px] text-white font-mono">{fmt(account)}</p>
+              </div>
+              <button onClick={() => { disconnect(); setShowDropdown(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-[12px] text-slate-400 hover:text-red-400 hover:bg-red-500/[0.06] transition-colors">
+                <LogOut size={13} /> Disconnect
               </button>
             </div>
           )}
         </div>
-
       </div>
     </header>
   );
