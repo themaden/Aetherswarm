@@ -1,41 +1,98 @@
 import * as crypto from 'crypto';
 
-/**
- * @class AxlNode
- * @description Implements a P2P node for the Ghost Swarm using TLS/Yggdrasil-like encrytion.
- 
-*/
-
 export class AxlNode {
+    private node: any;
+    private peers: Map<string, any> = new Map();
+    public nodeId: string;
+    public status: string = 'Initializing...';
+    public role: string;
 
-     private nodeId: string;
-     private peers: Set<string> = new Set();
+    constructor(role: string = 'Swarm Agent') {
+        this.nodeId = crypto.randomBytes(16).toString('hex');
+        this.role = role;
+    }
 
-     constructor() {
-          this.nodeId = crypto.randomBytes(16).toString('hex');
-          console.log(`AxlNode initialized with ID: ${this.nodeId}`);
-     }
+    async start(): Promise<void> {
+        try {
+            console.log(`[AXL] Starting libp2p node (ID: ${this.nodeId})...`);
+            
+            // Use Function constructor to bypass ts-node transpiling dynamic imports into require()
+            const importESM = new Function('modulePath', 'return import(modulePath)');
+            
+            const { createLibp2p } = await importESM('libp2p');
+            const { tcp } = await importESM('@libp2p/tcp');
+            const { webSockets } = await importESM('@libp2p/websockets');
+            const { noise } = await importESM('@chainsafe/libp2p-noise');
+            const { yamux } = await importESM('@chainsafe/libp2p-yamux');
+            const { mdns } = await importESM('@libp2p/mdns');
+            const { identify } = await importESM('@libp2p/identify');
 
-     /**
-      * @dev Connects to another agent in the swarm.
-      */
+            this.node = await createLibp2p({
+                addresses: {
+                    // Listen on random ports for tcp and websockets
+                    listen: ['/ip4/0.0.0.0/tcp/0', '/ip4/0.0.0.0/tcp/0/ws']
+                },
+                transports: [
+                    tcp(),
+                    webSockets()
+                ],
+                connectionEncrypters: [
+                    noise()
+                ],
+                streamMuxers: [
+                    yamux()
+                ],
+                peerDiscovery: [
+                    mdns({
+                        interval: 1000
+                    })
+                ],
+                services: {
+                    identify: identify()
+                }
+            });
 
-     async connectToPeer(peerId: string): Promise<void> {
-        // In reality, this uses gVisor stack to bypass NAT without port forwarding
-        console.log(`[AXL] Establishing encrypted tunnel to: ${peerId}`);
-        this.peers.add(peerId);
-     }
+            this.node.addEventListener('peer:discovery', (evt: any) => {
+                const peerId = evt.detail.id.toString();
+                if (!this.peers.has(peerId)) {
+                    console.log(`[AXL] Peer Discovered (mDNS): ${peerId.substring(0, 8)}...`);
+                }
+            });
 
-     /**
-      * 
-      * @dev Sends an end-to-end encrypted message to another agent
-      */
+            this.node.addEventListener('peer:connect', (evt: any) => {
+                const peerId = evt.detail.toString();
+                this.peers.set(peerId, { connectedAt: Date.now() });
+                console.log(`[AXL] Connection established with peer: ${peerId.substring(0, 8)}...`);
+            });
 
-     async sendSecureMessage(targetPeer: string, payload: any): Promise<void> {
-        if (!this.peers.has(targetPeer)) throw new Error("Peer not connected");
+            this.node.addEventListener('peer:disconnect', (evt: any) => {
+                const peerId = evt.detail.toString();
+                this.peers.delete(peerId);
+                console.log(`[AXL] Peer disconnected: ${peerId.substring(0, 8)}...`);
+            });
 
-        const secretMessage = JSON.stringify(payload);
-        console.log(`[AXL] Sending E2E encrypted data to ${targetPeer}...`);
-        // Simulate Yggdrasil encryption
+            await this.node.start();
+            this.status = 'Active';
+            
+            this.node.getMultiaddrs().forEach((addr: any) => {
+                console.log(`[AXL] Node listening on: ${addr.toString()}`);
+            });
+            
+            console.log(`[AXL] libp2p node started successfully with peer ID: ${this.node.peerId.toString()}`);
+        } catch (error) {
+            console.error('[AXL] Failed to start libp2p node:', error);
+            this.status = 'Failed';
+        }
+    }
+
+    getConnectedPeers() {
+        return Array.from(this.peers.entries()).map(([id, data]) => ({
+            id,
+            ...data
+        }));
+    }
+
+    getLibp2pId() {
+        return this.node ? this.node.peerId.toString() : this.nodeId;
     }
 }
