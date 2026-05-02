@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/shield-half.svg" width="100" alt="AetherSwarm Logo">
-  <h1>AetherSwarm Architecture 🦾</h1>
-  <p><strong>Decentralized Autonomous Black-Box Hedge Fund & Ghost Swarm Architecture</strong></p>
+  <img src="./assets/banner.png" alt="AetherSwarm Banner" width="100%" />
+  
+  <br/>
 
   [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
   [![Solidity](https://img.shields.io/badge/Solidity-^0.8.24-blue?style=flat-square&logo=solidity)](https://soliditylang.org/)
