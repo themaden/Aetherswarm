@@ -1,7 +1,7 @@
 "use client";
 
 import React, { type ReactNode, useMemo } from 'react';
-import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight, Wallet, Globe, Hash } from 'lucide-react';
+import { Activity, ShieldCheck, Cpu, Zap, Terminal as TerminalIcon, ChevronRight, Wallet, Globe, Lock, TrendingUp, ArrowUpRight } from 'lucide-react';
 import { useBalance, useReadContract, useAccount, useWriteContract, useWaitForTransactionReceipt, useChainId, useSwitchChain } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/lib/constants';
@@ -9,29 +9,35 @@ import VaultABI from '@/abis/AetherSwarmVault.json';
 import iNFTABI from '@/abis/AetherSwarmiNFT.json';
 import { sepolia } from 'wagmi/chains';
 
-export default function AetherSwarmPremium() {
+export default function AetherSwarmDashboard() {
   const { address: accountAddress, isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const [mounted, setMounted] = React.useState(false);
   const [depositAmount, setDepositAmount] = React.useState('');
   const [backendStatus, setBackendStatus] = React.useState<'connected' | 'disconnected'>('disconnected');
+  const [triggerLoading, setTriggerLoading] = React.useState(false);
 
   const [hookData, setHookData] = React.useState<any>(null);
   const [logs, setLogs] = React.useState<any[]>([]);
+  const [agents, setAgents] = React.useState<any[]>([]);
+  const logEndRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     setMounted(true);
     const fetchData = async () => {
       try {
-        const [hookRes, logsRes] = await Promise.all([
+        const [hookRes, logsRes, agentsRes] = await Promise.all([
           fetch('http://localhost:3001/api/execution/hooks'),
-          fetch('http://localhost:3001/api/logs')
+          fetch('http://localhost:3001/api/logs'),
+          fetch('http://localhost:3001/api/agents')
         ]);
         const hookInfo = await hookRes.json();
         const logsData = await logsRes.json();
+        const agentsData = await agentsRes.json();
         setHookData(hookInfo.hook);
         setLogs(logsData.logs || []);
+        setAgents(agentsData.agents || []);
         setBackendStatus('connected');
       } catch (error) {
         console.error("Backend fetch error:", error);
@@ -42,6 +48,11 @@ export default function AetherSwarmPremium() {
     const interval = setInterval(fetchData, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-scroll terminal to bottom
+  React.useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
 
   // On-chain data
   const { data: vaultBalance, refetch: refetchVaultBalance } = useBalance({
@@ -95,6 +106,14 @@ export default function AetherSwarmPremium() {
     });
   };
 
+  const handleTrigger = async () => {
+    setTriggerLoading(true);
+    try {
+      await fetch('http://localhost:3001/api/test/trigger-loop', { method: 'POST' });
+    } catch (e) { console.error(e); }
+    setTimeout(() => setTriggerLoading(false), 2000);
+  };
+
   const formattedTVL = useMemo(() => {
     if (!mounted || !vaultBalance) return "0.0000 ETH";
     const val = parseFloat(formatEther(vaultBalance.value));
@@ -112,138 +131,184 @@ export default function AetherSwarmPremium() {
     return agentCount.toString();
   }, [agentCount, mounted]);
 
-  const shortAddress = accountAddress ? `${accountAddress.slice(0, 6)}...${accountAddress.slice(-4)}` : '—';
+  const shortAddress = accountAddress ? `${accountAddress.slice(0, 6)}...${accountAddress.slice(-4)}` : null;
 
   if (!mounted) return null;
   const isWrongNetwork = accountAddress && chainId !== sepolia.id;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 fade-in-up">
 
       {/* WRONG NETWORK */}
       {isWrongNetwork && (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between">
-          <p className="text-sm text-amber-200/80 font-medium">Yanlış ağ! <span className="font-bold text-white">Sepolia Testnet</span> ağına geçin.</p>
-          <button onClick={() => switchChain({ chainId: sepolia.id })} className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2 rounded-lg">Ağı Değiştir</button>
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center justify-between animate-pulse">
+          <p className="text-sm text-amber-200/80 font-medium">⚠️ Yanlış ağ! <span className="font-bold text-white">Sepolia Testnet</span> ağına geçin.</p>
+          <button onClick={() => switchChain({ chainId: sepolia.id })} className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95">Ağı Değiştir</button>
         </div>
       )}
 
-      {/* USER STATUS BAR - Her şey açık ve net */}
-      <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <StatusItem icon={<Wallet size={14} />} label="Cüzdan" value={isConnected ? shortAddress : 'Bağlı Değil'} color={isConnected ? 'text-emerald-400' : 'text-red-400'} />
-          <StatusItem icon={<Globe size={14} />} label="Ağ" value={chainId === sepolia.id ? 'Sepolia' : `Chain #${chainId}`} color={chainId === sepolia.id ? 'text-emerald-400' : 'text-amber-400'} />
-          <StatusItem icon={<Activity size={14} />} label="Bakiye" value={formattedUserBalance} color="text-blue-400" />
-          <StatusItem icon={<Cpu size={14} />} label="Backend" value={backendStatus === 'connected' ? 'Bağlı' : 'Bağlantı Yok'} color={backendStatus === 'connected' ? 'text-emerald-400' : 'text-red-400'} />
-          <StatusItem icon={<ShieldCheck size={14} />} label="Ajan Sayısı" value={formattedAgents} color="text-purple-400" />
-        </div>
-      </div>
-
-      {/* HEADER */}
-      <div className="flex justify-between items-end">
+      {/* HEADER + STATUS */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight mb-1">AetherSwarm <span className="text-blue-500">Dashboard</span></h1>
-          <p className="text-slate-500 text-sm">Tüm veriler blockchain ve backend&apos;den canlı olarak çekiliyor.</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Zap size={18} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-white tracking-tight">AetherSwarm <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">Dashboard</span></h1>
+              <p className="text-slate-600 text-[11px] font-medium">Merkeziyetsiz Otonom Hedge Fund • Sepolia Testnet</p>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={async () => {
-              try { await fetch('http://localhost:3001/api/test/trigger-loop', { method: 'POST' }); }
-              catch (e) { console.error(e); }
-            }}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-5 py-3 rounded-xl uppercase tracking-widest flex items-center gap-2 border border-blue-400/30 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
-          >
-            <Activity size={14} className="animate-pulse" /> AI Döngüsünü Başlat
-          </button>
-          <button onClick={handleMintAgent} disabled={isMintPending || isMintConfirming || !accountAddress || isWrongNetwork} className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-5 py-3 text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-30 active:scale-95">
-            <Zap size={14} className={isMintPending || isMintConfirming ? 'animate-pulse text-yellow-400' : 'text-emerald-400'} /> Ajan Oluştur
-          </button>
+
+        {/* Live Connection Status */}
+        <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-slate-600'}`}></div>
+            <span className={isConnected ? 'text-emerald-400' : 'text-slate-600'}>{isConnected ? shortAddress : 'Cüzdan Bağlı Değil'}</span>
+          </div>
+          <div className="w-px h-3 bg-white/10"></div>
+          <div className="flex items-center gap-1.5">
+            <div className={`w-2 h-2 rounded-full ${backendStatus === 'connected' ? 'bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.6)]' : 'bg-red-400'}`}></div>
+            <span className={backendStatus === 'connected' ? 'text-blue-400' : 'text-red-400'}>Backend {backendStatus === 'connected' ? 'Online' : 'Offline'}</span>
+          </div>
+          <div className="w-px h-3 bg-white/10"></div>
+          <span className="text-slate-600">{chainId === sepolia.id ? '🟢 Sepolia' : `⚠️ Chain #${chainId}`}</span>
         </div>
       </div>
 
-      {/* LIVE STATS - Backend'den gelen gerçek veriler */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <StatCard title="Kasa TVL (Vault)" value={formattedTVL} subtitle={`Kontrat: ${CONTRACT_ADDRESSES.VAULT.SEPOLIA.slice(0, 10)}...`} icon={<Activity size={20} />} iconColor="text-blue-400" />
-        <StatCard title="Dinamik Ücret (Hook)" value={hookData ? hookData.dynamicFee : '—'} subtitle={hookData ? `Mod: ${hookData.protectionMode}` : 'Backend bekleniyor...'} icon={<Zap size={20} />} iconColor="text-yellow-400" />
-        <StatCard title="Kasa Durumu" value={hookData ? hookData.status : '—'} subtitle={hookData ? `Hook: ${hookData.name}` : 'Backend bekleniyor...'} icon={<ShieldCheck size={20} />} iconColor="text-emerald-400" />
+      {/* ACTION BUTTONS */}
+      <div className="flex gap-3">
+        <button
+          onClick={handleTrigger}
+          disabled={triggerLoading}
+          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white text-[10px] font-black px-6 py-3 rounded-xl uppercase tracking-widest flex items-center gap-2 border border-blue-400/20 shadow-lg shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-60"
+        >
+          <Activity size={14} className={triggerLoading ? 'animate-spin' : 'animate-pulse'} />
+          {triggerLoading ? 'Çalışıyor...' : 'AI Döngüsünü Başlat'}
+        </button>
+        <button onClick={handleMintAgent} disabled={isMintPending || isMintConfirming || !accountAddress || isWrongNetwork} className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl px-5 py-3 text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-30 active:scale-95">
+          <Cpu size={14} className={isMintPending || isMintConfirming ? 'animate-pulse text-yellow-400' : 'text-emerald-400'} /> Ajan Oluştur (iNFT)
+        </button>
+      </div>
+
+      {/* STATS GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard title="Vault TVL" value={formattedTVL} icon={<Lock size={16} />} iconColor="text-blue-400" glowFrom="from-blue-500/5" />
+        <StatCard title="Bakiyeniz" value={formattedUserBalance} icon={<Wallet size={16} />} iconColor="text-emerald-400" glowFrom="from-emerald-500/5" />
+        <StatCard title="Dinamik Fee" value={hookData ? hookData.dynamicFee : '—'} icon={<TrendingUp size={16} />} iconColor="text-yellow-400" glowFrom="from-yellow-500/5" />
+        <StatCard title="iNFT Ajanlar" value={formattedAgents} icon={<Cpu size={16} />} iconColor="text-purple-400" glowFrom="from-purple-500/5" />
       </div>
 
       {/* MAIN CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {/* AI TERMINAL - Backend'den canlı loglar */}
+        {/* AI TERMINAL */}
         <div className="lg:col-span-8">
-          <section className="bg-black/50 border border-white/[0.08] rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 bg-red-500 rounded-full"></div>
-                <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full"></div>
-                <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                <span className="ml-2 text-xs text-slate-500 font-mono">ai-neural-loop</span>
+          <section className="bg-[#0a0a12] border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl">
+            {/* Terminal Header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-3 h-3 bg-red-500/80 rounded-full hover:bg-red-400 transition-colors"></div>
+                <div className="w-3 h-3 bg-yellow-500/80 rounded-full hover:bg-yellow-400 transition-colors"></div>
+                <div className="w-3 h-3 bg-green-500/80 rounded-full hover:bg-green-400 transition-colors"></div>
+                <span className="ml-3 text-[10px] text-slate-500 font-mono font-bold">aetherswarm — ai-neural-loop</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${backendStatus === 'connected' ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]' : 'bg-red-400'}`}></div>
-                <span className="text-[10px] text-slate-500 font-mono">{backendStatus === 'connected' ? 'LIVE' : 'OFFLINE'}</span>
+                <div className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'connected' ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></div>
+                <span className={`text-[9px] font-mono font-bold uppercase tracking-widest ${backendStatus === 'connected' ? 'text-emerald-500/60' : 'text-red-500/60'}`}>{backendStatus === 'connected' ? 'Live Stream' : 'Disconnected'}</span>
               </div>
             </div>
-            <div className="space-y-2 h-[380px] overflow-y-auto font-mono text-xs custom-scrollbar">
+            {/* Terminal Body */}
+            <div className="p-5 space-y-1 h-[360px] overflow-y-auto font-mono text-[11px] custom-scrollbar">
               {logs.length > 0 ? (
                 logs.map((log: any) => {
-                  const isDecision = log.text.includes('AI_DECISION');
-                  const isProof = log.text.includes('PROOF');
-                  const isData = log.text.includes('DATA');
-                  const isError = log.text.includes('FAIL') || log.text.includes('ERROR');
+                  const t = log.text;
+                  const isDecision = t.includes('AI_DECISION');
+                  const isProof = t.includes('PROOF');
+                  const isTEE = t.includes('TEE_ENCLAVE') || t.includes('Sealed');
+                  const isData = t.includes('DATA') || t.includes('Fetching');
+                  const isSystem = t.includes('SYSTEM') || t.includes('WEB3') || t.includes('DEEPSEEK');
+                  const isError = t.includes('FAIL') || t.includes('ERROR');
+
+                  let bgClass = '';
+                  let textClass = 'text-slate-500';
+
+                  if (isDecision) { bgClass = 'bg-yellow-500/[0.06] border-l-2 border-yellow-500/60 ml-0 pl-3'; textClass = 'text-yellow-300 font-semibold'; }
+                  else if (isProof) { bgClass = 'bg-purple-500/[0.06] border-l-2 border-purple-500/60 ml-0 pl-3'; textClass = 'text-purple-300 font-semibold'; }
+                  else if (isTEE) { textClass = 'text-cyan-400'; }
+                  else if (isData) { textClass = 'text-blue-400/80'; }
+                  else if (isSystem) { textClass = 'text-slate-400'; }
+                  else if (isError) { textClass = 'text-red-400'; }
 
                   return (
-                    <div key={log.id} className={`px-3 py-2 rounded-lg ${isDecision ? 'bg-yellow-500/10 border-l-2 border-yellow-500' : isProof ? 'bg-purple-500/10 border-l-2 border-purple-500' : ''}`}>
-                      <span className="text-slate-600 mr-3">[{log.time}]</span>
-                      <span className={`${
-                        isDecision ? 'text-yellow-400 font-bold' :
-                        isProof ? 'text-purple-400 font-bold' :
-                        isData ? 'text-blue-400' :
-                        isError ? 'text-red-400' :
-                        'text-slate-400'
-                      }`}>{log.text}</span>
+                    <div key={log.id} className={`py-1.5 px-2 rounded ${bgClass} hover:bg-white/[0.02] transition-colors`}>
+                      <span className="text-slate-700 mr-2 select-none">[{log.time}]</span>
+                      <span className={textClass}>{t}</span>
                     </div>
                   );
                 })
               ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-600">
-                  <TerminalIcon size={24} />
-                  <span className="text-xs">AI döngüsü bekleniyor... &quot;AI Döngüsünü Başlat&quot; butonuna basın.</span>
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-slate-700">
+                  <TerminalIcon size={28} strokeWidth={1} />
+                  <div className="text-center">
+                    <p className="text-xs font-medium mb-1">AI döngüsü bekleniyor</p>
+                    <p className="text-[10px] text-slate-800">&quot;AI Döngüsünü Başlat&quot; butonuna basın</p>
+                  </div>
                 </div>
               )}
+              <div ref={logEndRef} />
             </div>
           </section>
         </div>
 
-        {/* DEPOSIT PANEL */}
+        {/* RIGHT PANEL */}
         <div className="lg:col-span-4 space-y-5">
-          <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-6">
-            <h2 className="text-lg font-bold text-white mb-1">Kasaya Yatır</h2>
-            <p className="text-slate-500 text-xs mb-6">Sepolia ETH yatırarak AI fonuna likidite sağla.</p>
+
+          {/* DEPOSIT */}
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 hover:border-white/[0.1] transition-colors">
+            <div className="flex items-center gap-2 mb-4">
+              <Lock size={14} className="text-emerald-400" />
+              <h2 className="text-sm font-bold text-white">Kasaya ETH Yatır</h2>
+            </div>
             <div className="space-y-4">
-              <div>
-                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2 block">Miktar (ETH)</label>
-                <input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="0.01" className="w-full bg-black/40 border border-white/[0.1] rounded-xl py-4 px-5 text-xl font-bold text-white placeholder:text-slate-700 focus:outline-none focus:border-blue-500/50 transition-all" />
-              </div>
-              <button onClick={handleDeposit} disabled={isDepositPending || isDepositConfirming || !accountAddress || !depositAmount || isWrongNetwork} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-sm disabled:opacity-30">
-                {isDepositPending || isDepositConfirming ? 'İşleniyor...' : 'Yatır'} <ChevronRight size={16} />
+              <input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="0.01" className="w-full bg-black/40 border border-white/[0.08] rounded-xl py-3.5 px-4 text-lg font-bold text-white placeholder:text-slate-800 focus:outline-none focus:border-blue-500/40 transition-all font-mono" />
+              <button onClick={handleDeposit} disabled={isDepositPending || isDepositConfirming || !accountAddress || !depositAmount || isWrongNetwork} className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] text-xs uppercase tracking-wider disabled:opacity-30 shadow-lg shadow-emerald-500/10">
+                {isDepositPending || isDepositConfirming ? 'İşleniyor...' : 'Yatır'} <ArrowUpRight size={14} />
               </button>
             </div>
           </div>
 
-          {/* CONTRACT ADDRESSES - Şeffaflık */}
+          {/* ACTIVE AGENTS */}
           <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Kontrat Adresleri</h4>
-            <div className="space-y-3 font-mono text-[10px]">
-              <div>
-                <span className="text-slate-600 block mb-1">Vault:</span>
-                <span className="text-blue-400 break-all">{CONTRACT_ADDRESSES.VAULT.SEPOLIA}</span>
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Aktif Ajan Düğümleri</h4>
+            <div className="space-y-2.5">
+              {agents.slice(0, 4).map((agent: any) => (
+                <div key={agent.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${agent.status === 'Active' ? 'bg-emerald-400' : 'bg-slate-600'}`}></div>
+                    <div>
+                      <p className="text-[11px] font-bold text-white">{agent.name}</p>
+                      <p className="text-[9px] text-slate-600">{agent.role}</p>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-slate-700 font-mono">{agent.location}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CONTRACTS */}
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5">
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Kontrat Adresleri</h4>
+            <div className="space-y-2 font-mono text-[9px]">
+              <div className="flex items-start gap-2">
+                <span className="text-slate-700 shrink-0">Vault:</span>
+                <span className="text-blue-400/80 break-all">{CONTRACT_ADDRESSES.VAULT.SEPOLIA}</span>
               </div>
-              <div>
-                <span className="text-slate-600 block mb-1">iNFT:</span>
-                <span className="text-emerald-400 break-all">{CONTRACT_ADDRESSES.NFT.SEPOLIA}</span>
+              <div className="flex items-start gap-2">
+                <span className="text-slate-700 shrink-0">iNFT:</span>
+                <span className="text-emerald-400/80 break-all">{CONTRACT_ADDRESSES.NFT.SEPOLIA}</span>
               </div>
             </div>
           </div>
@@ -255,35 +320,25 @@ export default function AetherSwarmPremium() {
 
 // --- HELPER COMPONENTS ---
 
-function StatusItem({ icon, label, value, color }: { icon: ReactNode; label: string; value: string; color: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="text-slate-600">{icon}</div>
-      <div>
-        <div className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">{label}</div>
-        <div className={`text-xs font-bold ${color}`}>{value}</div>
-      </div>
-    </div>
-  );
-}
-
 interface StatCardProps {
   title: string;
   value: string;
-  subtitle: string;
   icon: ReactNode;
   iconColor: string;
+  glowFrom: string;
 }
 
-function StatCard({ title, value, subtitle, icon, iconColor }: StatCardProps) {
+function StatCard({ title, value, icon, iconColor, glowFrom }: StatCardProps) {
   return (
-    <div className="bg-white/[0.02] border border-white/[0.06] p-5 rounded-2xl transition-all duration-300 hover:border-white/[0.12]">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`p-2 bg-white/[0.04] rounded-lg ${iconColor}`}>{icon}</div>
-        <h4 className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{title}</h4>
+    <div className="bg-white/[0.02] border border-white/[0.06] p-4 rounded-2xl group relative overflow-hidden transition-all duration-300 hover:border-white/[0.1] hover-lift">
+      <div className={`absolute inset-0 bg-gradient-to-br ${glowFrom} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+      <div className="relative z-10">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`${iconColor} opacity-60`}>{icon}</div>
+          <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">{title}</span>
+        </div>
+        <p className="text-xl font-black text-white">{value}</p>
       </div>
-      <p className="text-2xl font-extrabold text-white mb-1">{value}</p>
-      <p className="text-[10px] text-slate-600 font-mono">{subtitle}</p>
     </div>
   );
 }
