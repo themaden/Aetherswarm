@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { ethers } from 'ethers';
 import crypto from 'crypto';
-import { SealedInferenceBroker } from '../core/sealed-inference';
+import { SealedInferenceBroker } from '../tee-service/sealed-inference';
 
 export interface LogEntryData {
   id: string;
