@@ -45,42 +45,78 @@ aetherswarm/
 
 ```mermaid
 flowchart TB
-    subgraph Frontend [Frontend - Next.js & Wagmi]
-        UI[Dashboard & Terminal]
-        Wagmi[Wagmi / Viem]
-        Gallery[iNFT Gallery]
+    %% Users & Identity
+    User((Human / DAO)) -->|Connects Wallet & Signs| UI
+    User -->|ERC-7857 iNFT Ownership| AetherSwarmiNFT
+
+    %% Frontend Layer
+    subgraph Frontend [Command Center (Next.js)]
+        direction TB
+        UI[Glassmorphism Dashboard]
+        Terminal[Real-time Agent Terminal]
+        Wagmi[Wagmi / Viem Web3 Provider]
+        UI <--> Terminal
+        UI --> Wagmi
     end
 
-    subgraph Backend [Backend - Node.js API]
+    %% Backend / Agent Layer
+    subgraph GhostSwarmNode [Ghost Swarm Node (Node.js)]
+        direction TB
         API[Express REST API]
         Listener[Web3 Event Listener]
-        AILoop[DeepSeek AI Loop Service]
+        
+        subgraph LibP2P [Gensyn AXL Mesh (libp2p)]
+            MDNS[mDNS Discovery]
+            Noise[Noise Encryption]
+            Yamux[Yamux Multiplexing]
+            MDNS --> Noise --> Yamux
+        end
+
+        subgraph AILoop [Autonomous AI Loop]
+            DeepSeek[DeepSeek-V3 Neural Engine]
+            MarketData[CoinGecko Live Oracle]
+            MarketData --> DeepSeek
+        end
+
+        subgraph TEE [0G Labs / SGX Enclave]
+            SealedBroker[0G Serving Broker]
+            IntelTDX[Intel SGX Attestation Sim]
+            SealedBroker -.Fallback.-> IntelTDX
+        end
+        
+        Listener -->|Deposit Event Trigger| AILoop
+        AILoop -->|Encrypted Inference| TEE
+        TEE -->|MRENCLAVE Quote & Proof| AILoop
+        AILoop <--> LibP2P
     end
 
-    subgraph Contracts [Smart Contracts - Solidity]
-        Vault[AetherSwarmVault.sol]
-        iNFT[AetherSwarmiNFT.sol]
-        Hook[MockSwarmHook.sol]
+    %% Smart Contracts Layer
+    subgraph Contracts [On-Chain Execution (Sepolia)]
+        direction LR
+        Vault[AetherSwarmVault]
+        Hook[SwarmHook - Uniswap v4]
+        AetherSwarmiNFT[iNFT Registry]
+        Vault -->|Liquidity Rules| Hook
     end
 
-    subgraph Partners [Infrastructure Partners]
-        OG[0G Labs Storage & TEE]
-        Gensyn[Gensyn AXL Mesh]
-        DeepSeek[DeepSeek AI Engine]
-    end
+    %% External Connections
+    OtherNodes(((Other Swarm Nodes))) <.->|TCP / WebSockets| LibP2P
+    Wagmi -->|Deposits Funds| Vault
+    API -.->|Streams Logs & Agent Data| Terminal
+    AILoop -->|x402 Autonomous Payment| Contracts
+    AILoop -->|Update Dynamic Fee| Hook
+    TEE -->|Anchor Proof to Storage| 0GStorage[(0G Decentralized Storage)]
 
-    %% Interactions
-    User((User)) -->|Connect Wallet| Wagmi
-    User -->|Interaction| UI
-    Wagmi -->|Deposit ETH| Vault
-    Vault -.->|Emit Deposited Event| Listener
-    Listener -->|Trigger| AILoop
-    AILoop -->|Analyze Market| DeepSeek
-    AILoop -->|Store Proof| OG
-    AILoop -->|Sync State| Gensyn
-    API -->|Provide Logs & Data| UI
-    AILoop -->|Decision Result| Hook
-    Hook -->|Update Fee| Vault
+    %% Styling
+    classDef ui fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef node fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#fff;
+    classDef tee fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#fff;
+    classDef contract fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fff;
+    
+    class UI,Terminal,Wagmi ui;
+    class API,Listener,AILoop,LibP2P,MDNS,Noise,Yamux node;
+    class TEE,SealedBroker,IntelTDX tee;
+    class Vault,Hook,AetherSwarmiNFT contract;
 ```
 
 ---
