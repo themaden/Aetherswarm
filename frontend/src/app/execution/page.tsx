@@ -23,8 +23,6 @@ export default function HookEnginePage() {
     return () => clearInterval(iv);
   }, []);
 
-  /* Simulated fee history bars */
-  const bars = [42, 68, 51, 88, 62, 95, 71, 44, 83, 55, 77, 60, 91, 48, 72];
 
   return (
     <div className="space-y-6">
@@ -71,36 +69,6 @@ export default function HookEnginePage() {
         </div>
       </div>
 
-      {/* FEE CHART */}
-      <div className="rounded-2xl border border-white/[0.05] bg-white/[0.018] p-6 fade-in-up fade-in-up-2">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <BarChart3 size={16} className="text-blue-400" />
-            <span className="text-sm font-black text-white">Fee Volatility Index</span>
-          </div>
-          <span className="text-[9px] text-slate-700 font-mono uppercase tracking-wider">24h window</span>
-        </div>
-        <div className="flex items-end gap-1.5 h-28">
-          {bars.map((h, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full rounded-sm transition-all duration-700"
-                style={{
-                  height: `${h}%`,
-                  background: i === 5 || i === 12
-                    ? 'linear-gradient(180deg, #3b82f6, #0ea5e9)'
-                    : 'rgba(255,255,255,0.06)',
-                  boxShadow: i === 5 || i === 12 ? '0 0 12px rgba(59,130,246,0.4)' : 'none',
-                }}
-              />
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-3 text-[9px] text-slate-800 font-bold uppercase tracking-wider">
-          <span>T-24h</span>
-          <span className="text-blue-700">● Hook Triggered</span>
-          <span>Now</span>
-        </div>
-      </div>
 
       {/* TRANSACTIONS */}
       <div className="rounded-2xl border border-white/[0.05] overflow-hidden fade-in-up fade-in-up-3">

@@ -31,8 +31,8 @@ export default function INFTGalleryGrid() {
       id: `#${i.toString().padStart(3, '0')}`,
       name: `Aether_Agent_${i + 1}`,
       type: i % 2 === 0 ? 'Strategy Master' : 'Hook Guardian',
-      memory: `QmX8...${i}v2`,
-      health: `${95 + (i % 5)}%`,
+      memory: 'Encrypted State',
+      health: 'Optimal',
       imageIndex: (i % 3) + 1
     }));
   }, [agentCount]);
