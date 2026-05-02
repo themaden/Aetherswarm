@@ -49,9 +49,7 @@ export default function CommandCenter() {
     return () => clearInterval(iv);
   }, []);
 
-  useEffect(() => {
-    logRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [logs]);
+  // Auto-scroll disabled — keep page position stable
 
   /* ── On-chain ── */
   const { data: vaultBal, refetch: refetchVault } = useBalance({

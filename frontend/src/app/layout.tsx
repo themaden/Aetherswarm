@@ -37,8 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Center-top purple whisper */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[300px] rounded-full bg-purple-600/[0.035] blur-[100px] animate-float-slow" style={{ animationDelay: '1s' }} />
 
-            {/* Subtle scanline */}
-            <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/10 to-transparent animate-scanline" />
+            {/* Subtle horizontal glow line at top */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/15 to-transparent" />
 
             {/* Noise texture */}
             <div className="absolute inset-0 opacity-[0.018]"
